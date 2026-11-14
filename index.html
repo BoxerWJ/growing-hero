@@ -14,7 +14,7 @@
 
     body {
       margin: 0;
-      padding: 16px;
+      padding: 12px;
       background: #edf6ff;
       color: #243349;
       font-family: sans-serif;
@@ -71,7 +71,7 @@
       background: #b88755;
     }
 
-    /* 위치와 방향은 이 상자가 담당 */
+    /* 주인공의 위치와 방향을 담당하는 상자 */
     #hero {
       position: absolute;
       bottom: 60px;
@@ -82,8 +82,10 @@
       pointer-events: none;
     }
 
-    /* 공격할 때 이미지 자체를 움직임 */
-    #heroImage {
+    /* 두 그림을 같은 자리에 겹쳐 놓음 */
+    .heroImage {
+      position: absolute;
+      inset: 0;
       display: block;
       width: 100%;
       height: 100%;
@@ -93,12 +95,25 @@
       -webkit-user-drag: none;
     }
 
-    #heroImage.attacking {
-      animation: heroAttack 280ms ease-out;
+    #heroPunch {
+      visibility: hidden;
     }
 
-    /* 살짝 뒤로 물러났다가 앞으로 몸을 내미는 공격 */
-    @keyframes heroAttack {
+    /* 공격 2일 때 주먹 지르는 그림만 보여 줌 */
+    #hero.punching #heroIdle {
+      visibility: hidden;
+    }
+
+    #hero.punching #heroPunch {
+      visibility: visible;
+    }
+
+    /* 공격 1: 몸을 앞으로 내미는 동작 */
+    #heroIdle.attackOne {
+      animation: heroAttackOne 280ms ease-out;
+    }
+
+    @keyframes heroAttackOne {
       0% {
         transform: translateX(0) rotate(0deg);
       }
@@ -121,7 +136,30 @@
       }
     }
 
-    /* 슬라임의 위치와 밀려나는 움직임을 담당 */
+    /* 공격 2: 새 그림으로 앞으로 짧게 치고 돌아옴 */
+    #heroPunch.attackTwo {
+      animation: heroAttackTwo 320ms ease-out;
+    }
+
+    @keyframes heroAttackTwo {
+      0% {
+        transform: translateX(-6px) rotate(-4deg);
+      }
+
+      35% {
+        transform: translateX(18px) rotate(3deg);
+      }
+
+      60% {
+        transform: translateX(18px) rotate(3deg);
+      }
+
+      100% {
+        transform: translateX(0) rotate(0deg);
+      }
+    }
+
+    /* 슬라임의 위치를 담당 */
     #slime {
       position: absolute;
       bottom: 60px;
@@ -130,7 +168,6 @@
       z-index: 2;
     }
 
-    /* 평소 말랑거리는 모습 */
     #slimeBody {
       position: relative;
       width: 100%;
@@ -142,6 +179,7 @@
       animation: squish 0.85s infinite alternate ease-in-out;
     }
 
+    /* 슬라임의 두 눈 */
     #slimeBody::before,
     #slimeBody::after {
       content: "";
@@ -161,7 +199,6 @@
       right: 19px;
     }
 
-    /* 맞으면 밝게 번쩍이며 찌그러짐 */
     #slimeBody.hit {
       animation: slimeHit 260ms ease-out;
     }
@@ -210,7 +247,6 @@
       background: #ff6576;
     }
 
-    /* 타격 효과와 피해 숫자가 들어가는 공간 */
     #effects {
       position: absolute;
       inset: 0;
@@ -218,7 +254,7 @@
       pointer-events: none;
     }
 
-    /* 맞은 자리에 나타나는 별 모양 */
+    /* 타격 순간 나타나는 별 모양 */
     .hitSpark {
       position: absolute;
       width: 58px;
@@ -231,6 +267,11 @@
         0% 50%, 27% 39%, 15% 10%, 39% 30%
       );
       animation: sparkPop 260ms ease-out forwards;
+    }
+
+    /* 공격 2의 타격 효과는 주황색 */
+    .hitSpark.punchSpark {
+      background: #ffc16b;
     }
 
     @keyframes sparkPop {
@@ -286,7 +327,7 @@
     #controls {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
       width: 100%;
       max-width: 900px;
       margin: 16px auto 0;
@@ -294,11 +335,11 @@
 
     .buttonGroup {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .controlButton {
-      width: 68px;
+      width: 64px;
       height: 64px;
       padding: 0;
       border: none;
@@ -306,7 +347,7 @@
       border-radius: 15px;
       background: #80b5ee;
       color: #172b45;
-      font-size: 21px;
+      font-size: 18px;
       font-weight: bold;
       cursor: pointer;
       touch-action: none;
@@ -320,9 +361,14 @@
       border-bottom-width: 2px;
     }
 
-    #attackButton {
+    #attackOneButton {
       border-bottom-color: #c28331;
       background: #ffd078;
+    }
+
+    #attackTwoButton {
+      border-bottom-color: #c2673d;
+      background: #ffa878;
     }
 
     #help {
@@ -336,17 +382,17 @@
       }
 
       .controlButton {
-        width: 60px;
+        width: 50px;
         height: 60px;
-        font-size: 19px;
+        font-size: 15px;
       }
 
       .buttonGroup {
-        gap: 6px;
+        gap: 4px;
       }
 
       #controls {
-        gap: 6px;
+        gap: 4px;
       }
     }
   </style>
@@ -361,12 +407,25 @@
       경험치 <span id="experience">0</span>/10
     </div>
 
-    <div id="message">슬라임 가까이에서 공격해 보자!</div>
+    <div id="message">두 가지 공격을 사용해 보자!</div>
 
     <div id="ground"></div>
 
     <div id="hero">
-      <img id="heroImage" src="hero.png" alt="우리의 주인공">
+      <img
+        id="heroIdle"
+        class="heroImage"
+        src="hero.png"
+        alt="우리의 주인공"
+      >
+
+      <img
+        id="heroPunch"
+        class="heroImage"
+        src="hero-attack2.png"
+        alt="주먹을 지르는 주인공"
+        aria-hidden="true"
+      >
     </div>
 
     <div id="slime">
@@ -382,27 +441,48 @@
 
   <div id="controls">
     <div class="buttonGroup">
-      <button id="leftButton" class="controlButton"
-              aria-label="왼쪽 이동">◀</button>
-      <button id="rightButton" class="controlButton"
-              aria-label="오른쪽 이동">▶</button>
+      <button
+        id="leftButton"
+        class="controlButton"
+        aria-label="왼쪽 이동"
+      >◀</button>
+
+      <button
+        id="rightButton"
+        class="controlButton"
+        aria-label="오른쪽 이동"
+      >▶</button>
     </div>
 
     <div class="buttonGroup">
-      <button id="attackButton" class="controlButton">공격</button>
-      <button id="jumpButton" class="controlButton">점프</button>
+      <button
+        id="attackOneButton"
+        class="controlButton"
+      >공격 1</button>
+
+      <button
+        id="attackTwoButton"
+        class="controlButton"
+      >공격 2</button>
+
+      <button
+        id="jumpButton"
+        class="controlButton"
+      >점프</button>
     </div>
   </div>
 
   <p id="help">
-    컴퓨터: 방향키로 이동 · 스페이스바로 점프 · Z키로 공격<br>
-    휴대폰: 이동하면서 점프와 공격을 해 보자!
+    방향키: 이동 · 스페이스바: 점프<br>
+    Z키: 공격 1 · X키: 공격 2<br>
+    휴대폰에서는 화면 버튼을 눌러 줘!
   </p>
 
   <script>
     const game = document.getElementById("game");
     const hero = document.getElementById("hero");
-    const heroImage = document.getElementById("heroImage");
+    const heroIdle = document.getElementById("heroIdle");
+    const heroPunch = document.getElementById("heroPunch");
     const slime = document.getElementById("slime");
     const slimeBody = document.getElementById("slimeBody");
     const slimeHealth = document.getElementById("slimeHealth");
@@ -420,9 +500,11 @@
     let heroX = 30;
     let heroY = 0;
     let verticalSpeed = 0;
+
+    // 1은 오른쪽, -1은 왼쪽
     let direction = 1;
 
-    // 키보드와 멀티터치 입력
+    // 키보드와 멀티터치 입력을 따로 기억
     const keys = new Set();
     const leftTouches = new Set();
     const rightTouches = new Set();
@@ -436,20 +518,50 @@
     let slimeHealthValue = slimeMaxHealth;
     let slimeAlive = true;
     let slimeReturnAt = 0;
-
-    // 공격받았을 때 밀려나는 거리
     let slimeKnockback = 0;
 
-    // 공격 준비 후 몸을 내미는 순간에 타격 판정
-    const attackReach = 55;
-    const attackDuration = 280;
-    const attackCooldown = 380;
-    const impactDelay = 110;
+    // 두 공격의 설정
+    const attackSettings = {
+      1: {
+        duration: 280,
+        cooldown: 380,
+        impactDelay: 110,
+        reach: 55,
+        knockback: 30
+      },
+
+      2: {
+        duration: 320,
+        cooldown: 430,
+        impactDelay: 115,
+        reach: 55,
+        knockback: 40
+      }
+    };
 
     let attackEndAt = 0;
     let nextAttackAt = 0;
     let pendingHitAt = null;
     let attackDirection = 1;
+    let currentAttackType = 1;
+
+    // 공격 그림이 제대로 불러와졌는지 확인
+    let punchImageReady = false;
+
+    function checkPunchImage() {
+      punchImageReady =
+        heroPunch.complete && heroPunch.naturalWidth > 0;
+    }
+
+    heroPunch.addEventListener("load", checkPunchImage);
+
+    heroPunch.addEventListener("error", () => {
+      punchImageReady = false;
+      message.textContent =
+        "공격 그림을 찾지 못했어. hero-attack2.png 이름을 확인해 줘!";
+    });
+
+    checkPunchImage();
 
     function jump() {
       if (heroY === 0) {
@@ -457,32 +569,56 @@
       }
     }
 
-    // 같은 효과를 다시 재생하는 함수
+    // 같은 동작을 처음부터 다시 재생
     function restartAnimation(element, className) {
       element.classList.remove(className);
       void element.offsetWidth;
       element.classList.add(className);
     }
 
-    function attack() {
+    function attack(type) {
       const now = performance.now();
 
+      // 공격 사이에는 잠깐의 대기 시간이 필요
       if (now < nextAttackAt) {
         return;
       }
 
-      attackDirection = direction;
-      attackEndAt = now + attackDuration;
-      nextAttackAt = now + attackCooldown;
-      pendingHitAt = now + impactDelay;
+      if (type === 2 && !punchImageReady) {
+        message.textContent =
+          "공격 그림을 불러오는 중이야. 파일 이름도 확인해 줘!";
+        return;
+      }
 
-      restartAnimation(heroImage, "attacking");
+      const settings = attackSettings[type];
+
+      currentAttackType = type;
+      attackDirection = direction;
+      attackEndAt = now + settings.duration;
+      nextAttackAt = now + settings.cooldown;
+      pendingHitAt = now + settings.impactDelay;
+
+      // 이전 공격 모습 정리
+      hero.classList.remove("punching");
+      heroIdle.classList.remove("attackOne");
+      heroPunch.classList.remove("attackTwo");
+
+      if (type === 1) {
+        restartAnimation(heroIdle, "attackOne");
+      } else {
+        hero.classList.add("punching");
+        restartAnimation(heroPunch, "attackTwo");
+      }
     }
 
     // 타격 효과와 피해 숫자 만들기
-    function showHitEffect(x) {
+    function showHitEffect(x, type) {
       const spark = document.createElement("div");
-      spark.className = "hitSpark";
+
+      spark.className = type === 2
+        ? "hitSpark punchSpark"
+        : "hitSpark";
+
       spark.style.left = `${x}px`;
       spark.style.bottom = "88px";
       effects.appendChild(spark);
@@ -503,55 +639,7 @@
       }, { once: true });
     }
 
-    function checkAttackHit(now) {
-      if (!slimeAlive) {
-        return;
-      }
-
-      const targetX = getSlimeDrawX();
-
-      const attackLeft = attackDirection === 1
-        ? heroX + heroWidth / 2
-        : heroX - attackReach;
-
-      const attackRight = attackDirection === 1
-        ? heroX + heroWidth + attackReach
-        : heroX + heroWidth / 2;
-
-      const horizontalHit =
-        attackRight >= targetX &&
-        attackLeft <= targetX + slimeWidth;
-
-      // 跳び上がりすぎていると地面の敵には当たらない
-      const verticalHit = heroY + 28 <= slimeHeight;
-
-      if (!horizontalHit || !verticalHit) {
-        message.textContent =
-          "空振り！ スライムの近くで攻撃してみよう！";
-        return;
-      }
-
-      slimeHealthValue -= 1;
-
-      showHitEffect(targetX + slimeWidth / 2);
-
-      // 攻撃した方向へ押し出す
-      slimeKnockback = attackDirection * 30;
-
-      restartAnimation(slimeBody, "hit");
-
-      if (slimeHealthValue <= 0) {
-        slimeAlive = false;
-        slimeReturnAt = now + 2000;
-        message.textContent =
-          "スライムを倒した！ 少しするとまた現れるよ！";
-      } else {
-        message.textContent =
-          `命中！ スライムの体力 ${slimeHealthValue}/${slimeMaxHealth}`;
-      }
-    }
-
-    // 押し出された分も含めたスライムの位置
+    // 밀려난 거리까지 포함한 슬라임의 표시 위치
     function getSlimeDrawX() {
       return Math.max(
         0,
@@ -562,17 +650,82 @@
       );
     }
 
-    heroImage.addEventListener("animationend", () => {
-      heroImage.classList.remove("attacking");
+    function checkAttackHit(now) {
+      if (!slimeAlive) {
+        return;
+      }
+
+      const settings = attackSettings[currentAttackType];
+      const targetX = getSlimeDrawX();
+
+      // 주인공이 바라보는 쪽에만 공격 범위를 만듦
+      const attackLeft = attackDirection === 1
+        ? heroX + heroWidth / 2
+        : heroX - settings.reach;
+
+      const attackRight = attackDirection === 1
+        ? heroX + heroWidth + settings.reach
+        : heroX + heroWidth / 2;
+
+      const horizontalHit =
+        attackRight >= targetX &&
+        attackLeft <= targetX + slimeWidth;
+
+      // 너무 높이 점프하면 땅에 있는 슬라임을 때릴 수 없음
+      const verticalHit = heroY + 28 <= slimeHeight;
+
+      if (!horizontalHit || !verticalHit) {
+        message.textContent =
+          "휙! 슬라임 가까이에서 슬라임을 보고 공격해 봐!";
+        return;
+      }
+
+      slimeHealthValue -= 1;
+
+      showHitEffect(
+        targetX + slimeWidth / 2,
+        currentAttackType
+      );
+
+      // 공격한 방향으로 슬라임을 밀어냄
+      slimeKnockback =
+        attackDirection * settings.knockback;
+
+      restartAnimation(slimeBody, "hit");
+
+      if (slimeHealthValue <= 0) {
+        slimeAlive = false;
+        slimeReturnAt = now + 2000;
+
+        message.textContent =
+          "슬라임을 물리쳤다! 잠시 후 다시 나타나!";
+      } else {
+        message.textContent =
+          `공격 ${currentAttackType} 명중! ` +
+          `슬라임 체력 ${slimeHealthValue}/${slimeMaxHealth}`;
+      }
+    }
+
+    heroIdle.addEventListener("animationend", () => {
+      heroIdle.classList.remove("attackOne");
+    });
+
+    heroPunch.addEventListener("animationend", () => {
+      heroPunch.classList.remove("attackTwo");
     });
 
     slimeBody.addEventListener("animationend", () => {
       slimeBody.classList.remove("hit");
     });
 
-    // キーボード操作
-    const gameKeys =
-      ["ArrowLeft", "ArrowRight", "Space", "KeyZ"];
+    // 키보드 조작
+    const gameKeys = [
+      "ArrowLeft",
+      "ArrowRight",
+      "Space",
+      "KeyZ",
+      "KeyX"
+    ];
 
     window.addEventListener("keydown", (event) => {
       if (!gameKeys.includes(event.code)) {
@@ -591,7 +744,11 @@
       }
 
       if (event.code === "KeyZ") {
-        attack();
+        attack(1);
+      }
+
+      if (event.code === "KeyX") {
+        attack(2);
       }
     });
 
@@ -602,7 +759,7 @@
       }
     });
 
-    // 移動ボタンは押している間だけ移動
+    // 이동 버튼은 손가락을 떼기 전까지 계속 이동
     function connectMoveButton(buttonId, touches) {
       const button = document.getElementById(buttonId);
 
@@ -621,7 +778,7 @@
       button.addEventListener("lostpointercapture", release);
     }
 
-    // ジャンプと攻撃は押した瞬間に実行
+    // 점프와 공격은 누르는 순간 한 번 실행
     function connectActionButton(buttonId, action) {
       const button = document.getElementById(buttonId);
 
@@ -630,6 +787,7 @@
         action();
       });
 
+      // 키보드로 화면 버튼을 선택한 경우에도 실행
       button.addEventListener("click", (event) => {
         if (event.detail === 0) {
           action();
@@ -639,10 +797,12 @@
 
     connectMoveButton("leftButton", leftTouches);
     connectMoveButton("rightButton", rightTouches);
-    connectActionButton("jumpButton", jump);
-    connectActionButton("attackButton", attack);
 
-    // 画面を離れたときに入力を解除
+    connectActionButton("jumpButton", jump);
+    connectActionButton("attackOneButton", () => attack(1));
+    connectActionButton("attackTwoButton", () => attack(2));
+
+    // 다른 화면으로 이동하면 입력을 해제
     function clearInputs() {
       keys.clear();
       leftTouches.clear();
@@ -654,9 +814,18 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         clearInputs();
+
+        // 화면을 떠난 뒤 늦게 공격이 맞는 현상을 방지
+        pendingHitAt = null;
+        attackEndAt = 0;
+
+        hero.classList.remove("punching");
+        heroIdle.classList.remove("attackOne");
+        heroPunch.classList.remove("attackTwo");
       }
     });
 
+    // 버튼을 길게 눌러도 메뉴가 뜨지 않게 함
     document.getElementById("controls")
       .addEventListener("contextmenu", (event) => {
         event.preventDefault();
@@ -665,8 +834,11 @@
     let previousTime = performance.now();
 
     function gameLoop(now) {
-      const deltaTime =
-        Math.min((now - previousTime) / 1000, 0.033);
+      // 기기 성능에 따라 이동 속도가 달라지지 않게 함
+      const deltaTime = Math.min(
+        (now - previousTime) / 1000,
+        0.033
+      );
 
       previousTime = now;
 
@@ -679,13 +851,18 @@
 
       const attacking = now < attackEndAt;
 
+      // 공격이 끝나면 원래 그림으로 복귀
+      if (!attacking) {
+        hero.classList.remove("punching");
+      }
+
       const moveLeft =
         keys.has("ArrowLeft") || leftTouches.size > 0;
 
       const moveRight =
         keys.has("ArrowRight") || rightTouches.size > 0;
 
-      // 攻撃中は移動を少し遅くして踏み込む感じにする
+      // 공격 중에는 조금 천천히 이동
       const currentSpeed = attacking
         ? moveSpeed * 0.35
         : moveSpeed;
@@ -706,12 +883,13 @@
         }
       }
 
+      // 화면 밖으로 나가지 못하게 함
       heroX = Math.max(
         0,
         Math.min(gameWidth - heroWidth, heroX)
       );
 
-      // ジャンプと重力
+      // 점프와 중력
       verticalSpeed -= gravity * deltaTime;
       heroY += verticalSpeed * deltaTime;
 
@@ -720,26 +898,26 @@
         verticalSpeed = 0;
       }
 
-      // 押し出されたスライムを徐々に元の位置へ戻す
+      // 밀려난 슬라임을 천천히 제자리로 되돌림
       slimeKnockback *= Math.exp(-10 * deltaTime);
 
-      // 攻撃動作の途中で一度だけ命中を判定
+      // 공격 동작 중 정해진 순간에 한 번만 타격 판정
       if (pendingHitAt !== null && now >= pendingHitAt) {
         pendingHitAt = null;
         checkAttackHit(now);
       }
 
-      // 倒されたスライムが再登場
+      // 쓰러진 슬라임은 2초 후 다시 등장
       if (!slimeAlive && now >= slimeReturnAt) {
         slimeAlive = true;
         slimeHealthValue = slimeMaxHealth;
         slimeKnockback = 0;
         slimeBody.classList.remove("hit");
 
-        message.textContent = "スライムがまた現れた！";
+        message.textContent = "슬라임이 다시 나타났다!";
       }
 
-      // 主人公の表示
+      // 주인공의 위치와 방향 표시
       const drawDirection = attacking
         ? attackDirection
         : direction;
@@ -748,7 +926,7 @@
       hero.style.bottom = `${60 + heroY}px`;
       hero.style.transform = `scaleX(${drawDirection})`;
 
-      // スライムと体力表示
+      // 슬라임과 체력 막대 표시
       const slimeDrawX = getSlimeDrawX();
 
       slime.style.left = `${slimeDrawX}px`;
