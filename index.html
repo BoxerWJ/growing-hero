@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우리들의 성장 모험</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 12px;
+      background: #edf6ff;
+      font-family: sans-serif;
+      text-align: center;
+      color: #243449;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: 26px;
+    }
+
+    .game {
+      max-width: 800px;
+      margin: auto;
+      overflow: hidden;
+      border: 4px solid #394b60;
+      border-radius: 16px;
+      background: white;
+    }
+
+    .status {
+      padding: 16px;
+      background: #fff8df;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .scene {
+      position: relative;
+      height: 360px;
+      overflow: hidden;
+      background: linear-gradient(#8dd7ff, #e4f7ff);
+    }
+
+    .sun {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: #ffe17b;
+    }
+
+    .cloud {
+      position: absolute;
+      top: 55px;
+      left: 10%;
+      width: 130px;
+      height: 40px;
+      border-radius: 50px;
+      background: white;
+    }
+
+    .hill {
+      position: absolute;
+      bottom: 60px;
+      left: -10%;
+      width: 80%;
+      height: 150px;
+      border-radius: 50% 50% 0 0;
+      background: #91cf9b;
+    }
+
+    .ground {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 70px;
+      border-top: 12px solid #67b74c;
+      background: #b68659;
+    }
+
+    .hero {
+      position: absolute;
+      bottom: 70px;
+      left: calc(50% - 45px);
+      width: 90px;
+      height: 140px;
+    }
+
+    .head {
+      position: absolute;
+      top: 0;
+      left: 20px;
+      width: 50px;
+      height: 49px;
+      border: 2px solid #49372c;
+      border-radius: 18px 18px 16px 16px;
+      background: #ffd5b0;
+      z-index: 3;
+    }
+
+    .hair {
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      width: 52px;
+      height: 23px;
+      border-radius: 17px 17px 5px 5px;
+      background: #191919;
+    }
+
+    .eye {
+      position: absolute;
+      top: 27px;
+      width: 4px;
+      height: 6px;
+      border-radius: 2px;
+      background: #222;
+    }
+
+    .eye.left { left: 12px; }
+    .eye.right { right: 12px; }
+
+    .mouth {
+      position: absolute;
+      bottom: 6px;
+      left: 19px;
+      width: 9px;
+      height: 4px;
+      border-bottom: 2px solid #a15b49;
+      border-radius: 50%;
+    }
+
+    .shirt {
+      position: absolute;
+      top: 47px;
+      left: 19px;
+      width: 52px;
+      height: 49px;
+      border-radius: 9px 9px 3px 3px;
+      background: #242424;
+      z-index: 2;
+    }
+
+    .buttons {
+      position: absolute;
+      top: 9px;
+      left: 24px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .button {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #e6e6e6;
+    }
+
+    .arm {
+      position: absolute;
+      top: 51px;
+      width: 15px;
+      height: 43px;
+      border-radius: 7px;
+      background: linear-gradient(
+        #242424 0%,
+        #242424 65%,
+        #ffd5b0 65%,
+        #ffd5b0 100%
+      );
+      z-index: 1;
+    }
+
+    .arm.left { left: 7px; }
+    .arm.right { right: 7px; }
+
+    .leg {
+      position: absolute;
+      top: 93px;
+      width: 22px;
+      height: 37px;
+      background: #3976ba;
+      border-bottom: 5px solid #2d5d93;
+    }
+
+    .leg.left { left: 20px; }
+    .leg.right { right: 20px; }
+
+    .shoe {
+      position: absolute;
+      bottom: 0;
+      width: 27px;
+      height: 12px;
+      border-radius: 5px 5px 2px 2px;
+      background: #373b45;
+    }
+
+    .shoe.left { left: 15px; }
+    .shoe.right { right: 15px; }
+
+    .info {
+      padding: 16px;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🌱 우리들의 성장 모험</h1>
+
+  <main class="game">
+    <div class="status">레벨 1 · 경험치 0 / 10</div>
+
+    <div class="scene">
+      <div class="sun"></div>
+      <div class="cloud"></div>
+      <div class="hill"></div>
+      <div class="ground"></div>
+
+      <!-- 레벨 1: 검은 머리, 검은 단추 옷, 청바지, 무기 없음 -->
+      <div class="hero" role="img"
+           aria-label="검은 머리에 검은 단추 상의와 청바지를 입은 모험가">
+        <div class="head">
+          <div class="hair"></div>
+          <div class="eye left"></div>
+          <div class="eye right"></div>
+          <div class="mouth"></div>
+        </div>
+
+        <div class="arm left"></div>
+        <div class="arm right"></div>
+
+        <div class="shirt">
+          <div class="buttons">
+            <div class="button"></div>
+            <div class="button"></div>
+            <div class="button"></div>
+          </div>
+        </div>
+
+        <div class="leg left"></div>
+        <div class="leg right"></div>
+        <div class="shoe left"></div>
+        <div class="shoe right"></div>
+      </div>
+    </div>
+
+    <div class="info">
+      오늘부터 모험 시작!<br>
+      장비: 검은 단추 옷 · 청바지<br>
+      무기: 없음
+    </div>
+  </main>
+</body>
+</html>
