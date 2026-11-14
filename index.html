@@ -86,20 +86,45 @@
       background: #b68659;
     }
 
-    /* 새 캐릭터 그림 */
     .hero {
       position: absolute;
       bottom: 70px;
-      left: calc(50% - 60px);
+      left: 0;
       width: 120px;
       height: 180px;
       object-fit: contain;
       z-index: 2;
+      user-select: none;
+      pointer-events: none;
     }
 
     .info {
       padding: 16px;
       line-height: 1.8;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 0 16px 20px;
+    }
+
+    .move-button {
+      width: 80px;
+      height: 56px;
+      border: 0;
+      border-radius: 12px;
+      background: #365f96;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .move-button:active {
+      background: #23416a;
     }
   </style>
 </head>
@@ -112,25 +137,179 @@
       레벨 1 · 경험치 0 / 10
     </div>
 
-    <div class="scene">
+    <div class="scene" id="scene">
       <div class="sun"></div>
       <div class="cloud"></div>
       <div class="hill"></div>
       <div class="ground"></div>
 
-      <!-- 검은 머리, 검은 단추 옷, 청바지, 무기 없음 -->
       <img
         class="hero"
+        id="hero"
         src="./hero.png"
         alt="검은 단추 옷과 청바지를 입은 레벨 1 모험가"
+        draggable="false"
       >
     </div>
 
     <div class="info">
-      오늘부터 모험 시작!<br>
+      ← → 방향키 또는 아래 버튼을 길게 눌러 이동!<br>
       장비: 검은 단추 옷 · 청바지<br>
       무기: 없음
     </div>
+
+    <div class="controls">
+      <button
+        class="move-button"
+        id="leftButton"
+        type="button"
+        aria-label="왼쪽으로 이동"
+      >←</button>
+
+      <button
+        class="move-button"
+        id="rightButton"
+        type="button"
+        aria-label="오른쪽으로 이동"
+      >→</button>
+    </div>
   </main>
+
+  <script>
+    const scene = document.getElementById("scene");
+    const hero = document.getElementById("hero");
+    const leftButton = document.getElementById("leftButton");
+    const rightButton = document.getElementById("rightButton");
+
+    // 캐릭터 위치와 이동 속도
+    let heroX = (scene.clientWidth - hero.offsetWidth) / 2;
+    const speed = 220;
+
+    const keys = {
+      left: false,
+      right: false
+    };
+
+    const touches = {
+      left: new Set(),
+      right: new Set()
+    };
+
+    function drawHero() {
+      hero.style.left = heroX + "px";
+    }
+
+    // 키보드로 이동
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        keys.left = true;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        keys.right = true;
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        keys.left = false;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        keys.right = false;
+      }
+    });
+
+    // 화면 버튼으로 이동
+    function setupButton(button, direction) {
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        button.setPointerCapture(event.pointerId);
+        touches[direction].add(event.pointerId);
+      });
+
+      function releasePointer(event) {
+        touches[direction].delete(event.pointerId);
+      }
+
+      button.addEventListener("pointerup", releasePointer);
+      button.addEventListener("pointercancel", releasePointer);
+      button.addEventListener("lostpointercapture", releasePointer);
+
+      button.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+      });
+    }
+
+    setupButton(leftButton, "left");
+    setupButton(rightButton, "right");
+
+    // 다른 창으로 이동하면 멈추기
+    function stopMoving() {
+      keys.left = false;
+      keys.right = false;
+      touches.left.clear();
+      touches.right.clear();
+    }
+
+    window.addEventListener("blur", stopMoving);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopMoving();
+      }
+    });
+
+    // 화면 크기가 바뀌어도 밖으로 나가지 않게 하기
+    window.addEventListener("resize", () => {
+      const maxX = Math.max(0, scene.clientWidth - hero.offsetWidth);
+      heroX = Math.max(0, Math.min(heroX, maxX));
+      drawHero();
+    });
+
+    let previousTime = null;
+
+    function gameLoop(currentTime) {
+      if (previousTime === null) {
+        previousTime = currentTime;
+      }
+
+      const deltaTime = Math.min(
+        (currentTime - previousTime) / 1000,
+        0.05
+      );
+
+      previousTime = currentTime;
+
+      const movingLeft = keys.left || touches.left.size > 0;
+      const movingRight = keys.right || touches.right.size > 0;
+
+      const direction =
+        Number(movingRight) - Number(movingLeft);
+
+      heroX += direction * speed * deltaTime;
+
+      // 바라보는 방향 바꾸기
+      if (direction < 0) {
+        hero.style.transform = "scaleX(-1)";
+      } else if (direction > 0) {
+        hero.style.transform = "scaleX(1)";
+      }
+
+      // 화면 양 끝에서 멈추기
+      const maxX = Math.max(0, scene.clientWidth - hero.offsetWidth);
+      heroX = Math.max(0, Math.min(heroX, maxX));
+
+      drawHero();
+      requestAnimationFrame(gameLoop);
+    }
+
+    drawHero();
+    requestAnimationFrame(gameLoop);
+  </script>
 </body>
 </html>
