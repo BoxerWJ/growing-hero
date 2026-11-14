@@ -2,8 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>우리들의 성장 모험</title>
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>우리의 성장 게임</title>
 
   <style>
     * {
@@ -12,485 +14,550 @@
 
     body {
       margin: 0;
-      padding: 24px 12px;
+      padding: 16px;
       background: #edf6ff;
+      color: #243349;
       font-family: sans-serif;
       text-align: center;
-      color: #243449;
     }
 
     h1 {
-      margin: 0 0 16px;
-      font-size: 26px;
+      margin: 8px 0 14px;
+      font-size: 25px;
     }
 
-    .game {
-      max-width: 800px;
-      margin: auto;
-      overflow: hidden;
-      border: 4px solid #394b60;
-      border-radius: 16px;
-      background: white;
-    }
-
-    .status {
-      padding: 16px;
-      background: #fff8df;
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .scene {
+    #game {
       position: relative;
-      height: 360px;
+      width: 100%;
+      max-width: 900px;
+      height: 390px;
+      margin: 0 auto;
       overflow: hidden;
-      background: linear-gradient(#8dd7ff, #e4f7ff);
+      border: 4px solid #34475e;
+      border-radius: 16px;
+      background: linear-gradient(#a9e2ff, #effbff);
     }
 
-    .sun {
+    #status {
       position: absolute;
-      top: 30px;
-      right: 40px;
-      width: 65px;
-      height: 65px;
-      border-radius: 50%;
-      background: #ffe17b;
+      top: 14px;
+      left: 14px;
+      z-index: 5;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      text-align: left;
+      font-weight: bold;
+      line-height: 1.6;
     }
 
-    .cloud {
+    #message {
       position: absolute;
-      top: 55px;
-      left: 10%;
-      width: 130px;
-      height: 40px;
-      border-radius: 50px;
-      background: white;
+      top: 100px;
+      left: 0;
+      width: 100%;
+      padding: 0 12px;
+      font-weight: bold;
+      color: #36536e;
     }
 
-    .hill {
+    #ground {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 60px;
+      border-top: 10px solid #75bc55;
+      background: #b88755;
+    }
+
+    #hero {
       position: absolute;
       bottom: 60px;
-      left: -10%;
-      width: 80%;
-      height: 150px;
-      border-radius: 50% 50% 0 0;
-      background: #91cf9b;
-    }
-
-    .ground {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 70px;
-      border-top: 12px solid #67b74c;
-      background: #b68659;
-    }
-
-    /* 레벨 1 캐릭터 */
-    .hero {
-      position: absolute;
-      bottom: 70px;
       left: 0;
-      width: 120px;
-      height: 180px;
-      object-fit: contain;
+      width: 90px;
+      height: 110px;
       z-index: 2;
+      object-fit: contain;
+      transform-origin: center;
+      pointer-events: none;
       user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    #slime {
+      position: absolute;
+      bottom: 60px;
+      left: 0;
+      width: 68px;
+      height: 54px;
+      border: 3px solid #329343;
+      border-radius: 50% 50% 35% 35%;
+      background: #7be36b;
+      transform-origin: center bottom;
+      animation: squish 0.85s infinite alternate ease-in-out;
+    }
+
+    /* 슬라임의 두 눈 */
+    #slime::before,
+    #slime::after {
+      content: "";
+      position: absolute;
+      top: 20px;
+      width: 7px;
+      height: 10px;
+      border-radius: 50%;
+      background: #203329;
+    }
+
+    #slime::before {
+      left: 19px;
+    }
+
+    #slime::after {
+      right: 19px;
+    }
+
+    /* 공격에 맞으면 잠깐 밝게 빛남 */
+    #slime.hit {
+      filter: brightness(1.7);
+    }
+
+    #slimeHealth {
+      position: absolute;
+      bottom: 125px;
+      left: 0;
+      width: 68px;
+      height: 9px;
+      overflow: hidden;
+      border: 2px solid white;
+      border-radius: 8px;
+      background: #56616c;
+    }
+
+    #slimeHealthFill {
+      width: 100%;
+      height: 100%;
+      background: #ff6576;
+    }
+
+    #fist {
+      position: absolute;
+      bottom: 100px;
+      left: 0;
+      z-index: 3;
+      display: none;
+      width: 44px;
+      height: 44px;
+      font-size: 36px;
+      line-height: 44px;
       pointer-events: none;
     }
 
-    /* 첫 번째 몬스터: 초록 슬라임 */
-    .slime {
-      position: absolute;
-      bottom: 70px;
-      left: 75%;
-      width: 64px;
-      height: 48px;
-      border: 3px solid #287b39;
-      border-radius: 50% 50% 30% 30%;
-      background: #7de36b;
-      z-index: 1;
-      transform-origin: center bottom;
-      animation: slimeBounce 1s ease-in-out infinite;
+    #controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      max-width: 900px;
+      margin: 16px auto 0;
     }
 
-    .slime-eye {
-      position: absolute;
-      top: 20px;
-      width: 6px;
-      height: 9px;
-      border-radius: 50%;
-      background: #243449;
+    .buttonGroup {
+      display: flex;
+      gap: 10px;
     }
 
-    .slime-eye.left {
-      left: 15px;
+    .controlButton {
+      width: 68px;
+      height: 64px;
+      padding: 0;
+      border: none;
+      border-bottom: 5px solid #537ba7;
+      border-radius: 15px;
+      background: #80b5ee;
+      color: #172b45;
+      font-size: 21px;
+      font-weight: bold;
+      cursor: pointer;
+
+      /* 손가락 여러 개로 동시에 조작할 수 있게 함 */
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
-    .slime-eye.right {
-      right: 15px;
+    .controlButton:active {
+      transform: translateY(3px);
+      border-bottom-width: 2px;
     }
 
-    .slime-mouth {
-      position: absolute;
-      top: 31px;
-      left: 25px;
-      width: 8px;
-      height: 5px;
-      border-bottom: 2px solid #243449;
-      border-radius: 50%;
+    #attackButton {
+      border-bottom-color: #c28331;
+      background: #ffd078;
     }
 
-    @keyframes slimeBounce {
-      0%, 100% {
+    #help {
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    @keyframes squish {
+      from {
         transform: scale(1.05, 0.92);
       }
 
-      50% {
+      to {
         transform: scale(0.95, 1.08);
       }
     }
 
-    .info {
-      padding: 16px;
-      line-height: 1.8;
-    }
+    @media (max-width: 420px) {
+      body {
+        padding: 8px;
+      }
 
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      padding: 0 12px 20px;
-    }
+      .controlButton {
+        width: 60px;
+        height: 60px;
+        font-size: 19px;
+      }
 
-    .control-button {
-      width: 76px;
-      height: 56px;
-      border: 0;
-      border-radius: 12px;
-      background: #365f96;
-      color: white;
-      font-size: 26px;
-      cursor: pointer;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-    }
+      .buttonGroup {
+        gap: 6px;
+      }
 
-    .control-button:active {
-      background: #23416a;
-    }
-
-    .jump-button {
-      background: #95602f;
-      font-size: 18px;
-    }
-
-    .jump-button:active {
-      background: #70451f;
+      #controls {
+        gap: 6px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <h1>🌱 우리들의 성장 모험</h1>
+  <h1>🌱 우리의 성장 게임</h1>
 
-  <main class="game">
-    <div class="status">
-      레벨 1 · 경험치 0 / 10
+  <div id="game">
+    <div id="status">
+      레벨 <span id="level">1</span><br>
+      경험치 <span id="experience">0</span>/10
     </div>
 
-    <div class="scene" id="scene">
-      <div class="sun"></div>
-      <div class="cloud"></div>
-      <div class="hill"></div>
-      <div class="ground"></div>
+    <div id="message">슬라임 가까이에서 공격해 보자!</div>
 
-      <!-- 초록 슬라임 -->
-      <div
-        class="slime"
-        id="slime"
-        role="img"
-        aria-label="초록 슬라임"
-      >
-        <div class="slime-eye left"></div>
-        <div class="slime-eye right"></div>
-        <div class="slime-mouth"></div>
-      </div>
+    <div id="ground"></div>
 
-      <!-- 검은 머리, 검은 단추 옷, 청바지, 무기 없음 -->
-      <img
-        class="hero"
-        id="hero"
-        src="./hero.png"
-        alt="검은 단추 옷과 청바지를 입은 레벨 1 모험가"
-        draggable="false"
-      >
+    <img id="hero" src="hero.png" alt="우리의 주인공">
+
+    <div id="slime"></div>
+
+    <div id="slimeHealth">
+      <div id="slimeHealthFill"></div>
     </div>
 
-    <div class="info">
-      ← → 이동 · 스페이스바 점프<br>
-      휴대폰에서는 이동과 점프를 동시에 눌러 봐!<br>
-      장비: 검은 단추 옷 · 청바지<br>
-      무기: 없음
+    <div id="fist">👊</div>
+  </div>
+
+  <div id="controls">
+    <div class="buttonGroup">
+      <button id="leftButton" class="controlButton"
+              aria-label="왼쪽 이동">◀</button>
+      <button id="rightButton" class="controlButton"
+              aria-label="오른쪽 이동">▶</button>
     </div>
 
-    <div class="controls">
-      <button
-        class="control-button"
-        id="leftButton"
-        type="button"
-        aria-label="왼쪽으로 이동"
-      >←</button>
-
-      <button
-        class="control-button"
-        id="rightButton"
-        type="button"
-        aria-label="오른쪽으로 이동"
-      >→</button>
-
-      <button
-        class="control-button jump-button"
-        id="jumpButton"
-        type="button"
-      >점프</button>
+    <div class="buttonGroup">
+      <button id="attackButton" class="controlButton">공격</button>
+      <button id="jumpButton" class="controlButton">점프</button>
     </div>
-  </main>
+  </div>
+
+  <p id="help">
+    컴퓨터: 방향키로 이동 · 스페이스바로 점프 · Z키로 공격<br>
+    휴대폰: 이동 버튼을 누르면서 점프나 공격 버튼을 눌러 보자!
+  </p>
 
   <script>
-    const scene = document.getElementById("scene");
+    const game = document.getElementById("game");
     const hero = document.getElementById("hero");
     const slime = document.getElementById("slime");
+    const slimeHealth = document.getElementById("slimeHealth");
+    const slimeHealthFill =
+      document.getElementById("slimeHealthFill");
+    const fist = document.getElementById("fist");
+    const message = document.getElementById("message");
 
-    const leftButton = document.getElementById("leftButton");
-    const rightButton = document.getElementById("rightButton");
-    const jumpButton = document.getElementById("jumpButton");
+    // 주인공의 크기와 움직임
+    const heroWidth = 90;
+    const heroHeight = 110;
+    const moveSpeed = 250;
+    const jumpPower = 620;
+    const gravity = 1700;
 
-    // 캐릭터의 가로 위치
-    let heroX = Math.max(
-      0,
-      (scene.clientWidth - hero.offsetWidth) / 2
-    );
-
-    // 땅에서 올라온 높이
+    let heroX = 30;
     let heroY = 0;
-
-    // 위아래로 움직이는 속도
     let verticalSpeed = 0;
 
-    const moveSpeed = 220;
-    const jumpPower = 520;
-    const gravity = 1500;
+    // 1이면 오른쪽, -1이면 왼쪽을 바라봄
+    let direction = 1;
 
-    let previousTime = null;
+    // 키보드와 화면 버튼의 입력을 따로 기억함
+    const keys = new Set();
+    const leftTouches = new Set();
+    const rightTouches = new Set();
 
-    // 키보드 입력 상태
-    const keys = {
-      left: false,
-      right: false
-    };
+    // 슬라임의 상태
+    const slimeWidth = 68;
+    const slimeHeight = 54;
+    const slimeMaxHealth = 3;
 
-    // 손가락마다 입력을 따로 기억
-    const touches = {
-      left: new Set(),
-      right: new Set()
-    };
+    let slimeX = 0;
+    let slimeHealthValue = slimeMaxHealth;
+    let slimeAlive = true;
+    let slimeHitUntil = 0;
+    let slimeReturnAt = 0;
 
-    function drawHero() {
-      hero.style.left = heroX + "px";
-      hero.style.bottom = (70 + heroY) + "px";
-    }
+    // 공격의 범위와 대기 시간
+    const attackReach = 55;
+    const attackDuration = 180;
+    const attackCooldown = 380;
 
+    let attackUntil = 0;
+    let nextAttackAt = 0;
+
+    // 점프는 바닥에 있을 때만 가능
     function jump() {
-      // 땅에 있을 때만 점프
-      if (heroY === 0 && verticalSpeed === 0) {
+      if (heroY === 0) {
         verticalSpeed = jumpPower;
       }
     }
 
-    // 키보드 입력
-    window.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        keys.left = true;
+    function attack() {
+      const now = performance.now();
+
+      // 너무 빠르게 연속 공격하지 못하게 함
+      if (now < nextAttackAt) {
+        return;
       }
 
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        keys.right = true;
+      attackUntil = now + attackDuration;
+      nextAttackAt = now + attackCooldown;
+
+      // 주인공이 바라보는 쪽에 공격 범위를 만듦
+      const attackLeft = direction === 1
+        ? heroX + heroWidth / 2
+        : heroX - attackReach;
+
+      const attackRight = direction === 1
+        ? heroX + heroWidth + attackReach
+        : heroX + heroWidth / 2;
+
+      const horizontalHit =
+        attackRight >= slimeX &&
+        attackLeft <= slimeX + slimeWidth;
+
+      // 너무 높이 점프해 있으면 땅의 슬라임을 때릴 수 없음
+      const verticalHit =
+        heroY + 28 <= slimeHeight &&
+        heroY + heroHeight >= 0;
+
+      if (slimeAlive && horizontalHit && verticalHit) {
+        slimeHealthValue -= 1;
+        slimeHitUntil = now + 160;
+
+        if (slimeHealthValue <= 0) {
+          slimeAlive = false;
+          slimeReturnAt = now + 2000;
+          message.textContent =
+            "슬라임을 물리쳤다! 잠시 후 다시 나타나!";
+        } else {
+          message.textContent =
+            `명중! 슬라임 체력 ${slimeHealthValue}/${slimeMaxHealth}`;
+        }
+      } else {
+        message.textContent =
+          "휙! 슬라임 가까이에서 슬라임을 보고 공격해 봐!";
+      }
+    }
+
+    // 키보드 조작
+    const gameKeys =
+      ["ArrowLeft", "ArrowRight", "Space", "KeyZ"];
+
+    window.addEventListener("keydown", (event) => {
+      if (!gameKeys.includes(event.code)) {
+        return;
+      }
+
+      event.preventDefault();
+      keys.add(event.code);
+
+      if (event.repeat) {
+        return;
       }
 
       if (event.code === "Space") {
-        event.preventDefault();
+        jump();
+      }
 
-        if (!event.repeat) {
-          jump();
-        }
+      if (event.code === "KeyZ") {
+        attack();
       }
     });
 
     window.addEventListener("keyup", (event) => {
-      if (event.key === "ArrowLeft") {
+      if (gameKeys.includes(event.code)) {
         event.preventDefault();
-        keys.left = false;
-      }
-
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        keys.right = false;
-      }
-
-      if (event.code === "Space") {
-        event.preventDefault();
+        keys.delete(event.code);
       }
     });
 
-    // 이동 버튼의 멀티터치 처리
-    function setupMoveButton(button, direction) {
+    // 이동 버튼은 손가락을 떼기 전까지 계속 이동
+    function connectMoveButton(buttonId, touches) {
+      const button = document.getElementById(buttonId);
+
       button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
-
         button.setPointerCapture(event.pointerId);
-        touches[direction].add(event.pointerId);
+        touches.add(event.pointerId);
       });
 
-      function releasePointer(event) {
-        touches[direction].delete(event.pointerId);
+      function release(event) {
+        touches.delete(event.pointerId);
       }
 
-      button.addEventListener("pointerup", releasePointer);
-      button.addEventListener("pointercancel", releasePointer);
-      button.addEventListener("lostpointercapture", releasePointer);
+      button.addEventListener("pointerup", release);
+      button.addEventListener("pointercancel", release);
+      button.addEventListener("lostpointercapture", release);
     }
 
-    setupMoveButton(leftButton, "left");
-    setupMoveButton(rightButton, "right");
+    // 점프와 공격은 버튼을 누를 때 한 번 실행
+    function connectActionButton(buttonId, action) {
+      const button = document.getElementById(buttonId);
 
-    // 다른 손가락으로 이동 중이어도 즉시 점프
-    jumpButton.addEventListener("pointerdown", (event) => {
-      event.preventDefault();
-      jump();
-    });
-
-    // 키보드로 점프 버튼을 선택해서 누를 때
-    jumpButton.addEventListener("click", (event) => {
-      if (event.detail === 0) {
-        jump();
-      }
-    });
-
-    // 버튼을 길게 눌렀을 때 메뉴가 나오지 않도록 처리
-    document.querySelectorAll(".control-button").forEach((button) => {
-      button.addEventListener("contextmenu", (event) => {
+      button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
+        action();
       });
-    });
 
-    function stopMoving() {
-      keys.left = false;
-      keys.right = false;
-
-      touches.left.clear();
-      touches.right.clear();
+      // 키보드로 화면 버튼을 선택한 경우에도 실행
+      button.addEventListener("click", (event) => {
+        if (event.detail === 0) {
+          action();
+        }
+      });
     }
 
-    // 다른 창으로 이동하면 이동 입력 초기화
-    window.addEventListener("blur", stopMoving);
+    connectMoveButton("leftButton", leftTouches);
+    connectMoveButton("rightButton", rightTouches);
+    connectActionButton("jumpButton", jump);
+    connectActionButton("attackButton", attack);
+
+    // 화면을 벗어났다가 돌아올 때 이동이 계속되는 현상 방지
+    function clearInputs() {
+      keys.clear();
+      leftTouches.clear();
+      rightTouches.clear();
+    }
+
+    window.addEventListener("blur", clearInputs);
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        stopMoving();
+        clearInputs();
       }
-
-      previousTime = null;
     });
 
-    // 캐릭터가 화면 밖으로 나가지 않도록 제한
-    function keepInsideScene() {
-      const maxX = Math.max(
+    // 화면 버튼을 길게 눌러도 메뉴가 뜨지 않게 함
+    document.getElementById("controls")
+      .addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+      });
+
+    let previousTime = performance.now();
+
+    function gameLoop(now) {
+      // 컴퓨터 속도에 따라 이동 속도가 달라지지 않게 함
+      const deltaTime = Math.min((now - previousTime) / 1000, 0.033);
+      previousTime = now;
+
+      const gameWidth = game.clientWidth;
+
+      slimeX = Math.max(
         0,
-        scene.clientWidth - hero.offsetWidth
+        Math.min(gameWidth - slimeWidth, gameWidth * 0.75)
       );
 
-      heroX = Math.max(0, Math.min(heroX, maxX));
-    }
+      const moveLeft =
+        keys.has("ArrowLeft") || leftTouches.size > 0;
 
-    // 작은 화면에서도 슬라임이 잘리지 않도록 배치
-    function positionSlime() {
-      const maxX = Math.max(
-        0,
-        scene.clientWidth - slime.offsetWidth - 8
-      );
+      const moveRight =
+        keys.has("ArrowRight") || rightTouches.size > 0;
 
-      const slimeX = Math.max(
-        0,
-        Math.min(scene.clientWidth * 0.75, maxX)
-      );
-
-      slime.style.left = slimeX + "px";
-    }
-
-    window.addEventListener("resize", () => {
-      keepInsideScene();
-      positionSlime();
-      drawHero();
-    });
-
-    function gameLoop(currentTime) {
-      if (previousTime === null) {
-        previousTime = currentTime;
+      if (moveLeft && !moveRight) {
+        heroX -= moveSpeed * deltaTime;
+        direction = -1;
       }
 
-      const deltaTime = Math.min(
-        (currentTime - previousTime) / 1000,
-        0.05
+      if (moveRight && !moveLeft) {
+        heroX += moveSpeed * deltaTime;
+        direction = 1;
+      }
+
+      // 주인공이 화면 밖으로 나가지 못하게 함
+      heroX = Math.max(
+        0,
+        Math.min(gameWidth - heroWidth, heroX)
       );
 
-      previousTime = currentTime;
+      // 점프와 중력
+      verticalSpeed -= gravity * deltaTime;
+      heroY += verticalSpeed * deltaTime;
 
-      const movingLeft =
-        keys.left || touches.left.size > 0;
-
-      const movingRight =
-        keys.right || touches.right.size > 0;
-
-      const direction =
-        Number(movingRight) - Number(movingLeft);
-
-      // 좌우 이동
-      heroX += direction * moveSpeed * deltaTime;
-
-      // 이동 방향으로 바라보기
-      if (direction < 0) {
-        hero.style.transform = "scaleX(-1)";
-      } else if (direction > 0) {
-        hero.style.transform = "scaleX(1)";
+      if (heroY <= 0) {
+        heroY = 0;
+        verticalSpeed = 0;
       }
 
-      // 점프 중에는 중력 때문에 아래로 떨어짐
-      if (heroY > 0 || verticalSpeed > 0) {
-        heroY +=
-          verticalSpeed * deltaTime
-          - 0.5 * gravity * deltaTime * deltaTime;
-
-        verticalSpeed -= gravity * deltaTime;
-
-        // 땅에 착지
-        if (heroY <= 0) {
-          heroY = 0;
-          verticalSpeed = 0;
-        }
+      // 쓰러진 슬라임이 2초 후 다시 등장
+      if (!slimeAlive && now >= slimeReturnAt) {
+        slimeAlive = true;
+        slimeHealthValue = slimeMaxHealth;
+        message.textContent = "슬라임이 다시 나타났다!";
       }
 
-      keepInsideScene();
-      drawHero();
+      // 주인공 위치와 바라보는 방향 표시
+      hero.style.left = `${heroX}px`;
+      hero.style.bottom = `${60 + heroY}px`;
+      hero.style.transform = `scaleX(${direction})`;
+
+      // 슬라임과 체력 막대 표시
+      slime.style.left = `${slimeX}px`;
+      slimeHealth.style.left = `${slimeX}px`;
+
+      slime.style.display = slimeAlive ? "block" : "none";
+      slimeHealth.style.display = slimeAlive ? "block" : "none";
+
+      slime.classList.toggle("hit", now < slimeHitUntil);
+
+      slimeHealthFill.style.width =
+        `${slimeHealthValue / slimeMaxHealth * 100}%`;
+
+      // 공격 중에는 주인공 앞에 주먹 표시
+      const attacking = now < attackUntil;
+
+      fist.style.display = attacking ? "block" : "none";
+      fist.style.left = direction === 1
+        ? `${heroX + heroWidth - 8}px`
+        : `${heroX - 36}px`;
+
+      fist.style.bottom = `${60 + heroY + 30}px`;
+      fist.style.transform = `scaleX(${direction})`;
 
       requestAnimationFrame(gameLoop);
     }
 
-    positionSlime();
-    drawHero();
     requestAnimationFrame(gameLoop);
   </script>
 </body>
