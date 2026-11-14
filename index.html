@@ -51,14 +51,44 @@
       line-height: 1.6;
     }
 
+    #heroHealthBar {
+      width: 130px;
+      height: 12px;
+      margin-top: 4px;
+      overflow: hidden;
+      border: 2px solid #b64655;
+      border-radius: 8px;
+      background: #ead4d7;
+    }
+
+    #heroHealthFill {
+      width: 100%;
+      height: 100%;
+      background: #ff6576;
+      transition: width 150ms ease;
+    }
+
+    #restartButton {
+      margin-top: 8px;
+      padding: 7px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #ffd078;
+      color: #243349;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
     #message {
       position: absolute;
-      top: 100px;
+      top: 155px;
       left: 0;
+      z-index: 5;
       width: 100%;
       padding: 0 12px;
       font-weight: bold;
       color: #36536e;
+      pointer-events: none;
     }
 
     #ground {
@@ -71,7 +101,7 @@
       background: #b88755;
     }
 
-    /* 주인공의 위치와 방향을 담당하는 상자 */
+    /* 주인공의 위치와 방향 */
     #hero {
       position: absolute;
       bottom: 60px;
@@ -82,7 +112,6 @@
       pointer-events: none;
     }
 
-    /* 두 그림을 같은 자리에 겹쳐 놓음 */
     .heroImage {
       position: absolute;
       inset: 0;
@@ -99,7 +128,6 @@
       visibility: hidden;
     }
 
-    /* 공격 2일 때 주먹 지르는 그림만 보여 줌 */
     #hero.punching #heroIdle {
       visibility: hidden;
     }
@@ -108,7 +136,13 @@
       visibility: visible;
     }
 
-    /* 공격 1: 몸을 앞으로 내미는 동작 */
+    /* 맞으면 잠깐 빨갛게 변함 */
+    #hero.hurt .heroImage {
+      filter: brightness(0.65) sepia(1)
+              saturate(12) hue-rotate(-35deg);
+    }
+
+    /* 공격 1 */
     #heroIdle.attackOne {
       animation: heroAttackOne 280ms ease-out;
     }
@@ -136,7 +170,7 @@
       }
     }
 
-    /* 공격 2: 새 그림으로 앞으로 짧게 치고 돌아옴 */
+    /* 공격 2 */
     #heroPunch.attackTwo {
       animation: heroAttackTwo 320ms ease-out;
     }
@@ -159,7 +193,6 @@
       }
     }
 
-    /* 슬라임의 위치를 담당 */
     #slime {
       position: absolute;
       bottom: 60px;
@@ -179,7 +212,6 @@
       animation: squish 0.85s infinite alternate ease-in-out;
     }
 
-    /* 슬라임의 두 눈 */
     #slimeBody::before,
     #slimeBody::after {
       content: "";
@@ -245,6 +277,7 @@
       width: 100%;
       height: 100%;
       background: #ff6576;
+      transition: width 120ms ease;
     }
 
     #effects {
@@ -254,7 +287,6 @@
       pointer-events: none;
     }
 
-    /* 타격 순간 나타나는 별 모양 */
     .hitSpark {
       position: absolute;
       width: 58px;
@@ -269,7 +301,6 @@
       animation: sparkPop 260ms ease-out forwards;
     }
 
-    /* 공격 2의 타격 효과는 주황색 */
     .hitSpark.punchSpark {
       background: #ffc16b;
     }
@@ -305,6 +336,16 @@
         -2px 2px 0 #773d22,
         2px 2px 0 #773d22;
       animation: damageFloat 650ms ease-out forwards;
+    }
+
+    .damageNumber.heroDamage {
+      color: #ff5353;
+      font-size: 28px;
+      text-shadow:
+        -1px -1px 0 white,
+        1px -1px 0 white,
+        -1px 1px 0 white,
+        1px 1px 0 white;
     }
 
     @keyframes damageFloat {
@@ -404,10 +445,19 @@
   <div id="game">
     <div id="status">
       레벨 <span id="level">1</span><br>
-      경험치 <span id="experience">0</span>/10
+      경험치 <span id="experience">0</span>/10<br>
+      ❤️ 체력 <span id="heroHealthText">10</span>/10
+
+      <div id="heroHealthBar">
+        <div id="heroHealthFill"></div>
+      </div>
+
+      <button id="restartButton" hidden>다시 시작</button>
     </div>
 
-    <div id="message">두 가지 공격을 사용해 보자!</div>
+    <div id="message">
+      슬라임을 공격해 봐! 그냥 닿으면 체력이 줄어들어!
+    </div>
 
     <div id="ground"></div>
 
@@ -483,6 +533,12 @@
     const hero = document.getElementById("hero");
     const heroIdle = document.getElementById("heroIdle");
     const heroPunch = document.getElementById("heroPunch");
+    const heroHealthText =
+      document.getElementById("heroHealthText");
+    const heroHealthFill =
+      document.getElementById("heroHealthFill");
+    const restartButton =
+      document.getElementById("restartButton");
     const slime = document.getElementById("slime");
     const slimeBody = document.getElementById("slimeBody");
     const slimeHealth = document.getElementById("slimeHealth");
@@ -504,12 +560,20 @@
     // 1은 오른쪽, -1은 왼쪽
     let direction = 1;
 
-    // 키보드와 멀티터치 입력을 따로 기억
+    // 주인공 체력
+    const heroMaxHealth = 10;
+    let heroHealthValue = heroMaxHealth;
+
+    // 빨갛게 표시하는 시간과 추가 피해를 막는 시간
+    let heroHurtUntil = 0;
+    let heroInvincibleUntil = 0;
+
+    // 키보드와 멀티터치 입력
     const keys = new Set();
     const leftTouches = new Set();
     const rightTouches = new Set();
 
-    // 슬라임의 상태
+    // 슬라임 상태
     const slimeWidth = 68;
     const slimeHeight = 54;
     const slimeMaxHealth = 3;
@@ -545,7 +609,7 @@
     let attackDirection = 1;
     let currentAttackType = 1;
 
-    // 공격 그림이 제대로 불러와졌는지 확인
+    // 공격 2 그림 확인
     let punchImageReady = false;
 
     function checkPunchImage() {
@@ -557,13 +621,40 @@
 
     heroPunch.addEventListener("error", () => {
       punchImageReady = false;
-      message.textContent =
-        "공격 그림을 찾지 못했어. hero-attack2.png 이름을 확인해 줘!";
+
+      if (heroHealthValue > 0) {
+        message.textContent =
+          "공격 그림을 찾지 못했어. hero-attack2.png 이름을 확인해 줘!";
+      }
     });
 
     checkPunchImage();
 
+    function clearInputs() {
+      keys.clear();
+      leftTouches.clear();
+      rightTouches.clear();
+    }
+
+    function clearAttack() {
+      pendingHitAt = null;
+      attackEndAt = 0;
+      hero.classList.remove("punching");
+      heroIdle.classList.remove("attackOne");
+      heroPunch.classList.remove("attackTwo");
+    }
+
+    function updateHeroHealth() {
+      heroHealthText.textContent = heroHealthValue;
+      heroHealthFill.style.width =
+        `${heroHealthValue / heroMaxHealth * 100}%`;
+    }
+
     function jump() {
+      if (heroHealthValue <= 0) {
+        return;
+      }
+
       if (heroY === 0) {
         verticalSpeed = jumpPower;
       }
@@ -577,9 +668,12 @@
     }
 
     function attack(type) {
+      if (heroHealthValue <= 0) {
+        return;
+      }
+
       const now = performance.now();
 
-      // 공격 사이에는 잠깐의 대기 시간이 필요
       if (now < nextAttackAt) {
         return;
       }
@@ -598,7 +692,6 @@
       nextAttackAt = now + settings.cooldown;
       pendingHitAt = now + settings.impactDelay;
 
-      // 이전 공격 모습 정리
       hero.classList.remove("punching");
       heroIdle.classList.remove("attackOne");
       heroPunch.classList.remove("attackTwo");
@@ -611,7 +704,25 @@
       }
     }
 
-    // 타격 효과와 피해 숫자 만들기
+    // ダメージ数字
+    function showDamageNumber(x, bottom, text, isHero) {
+      const damage = document.createElement("div");
+
+      damage.className = isHero
+        ? "damageNumber heroDamage"
+        : "damageNumber";
+
+      damage.textContent = text;
+      damage.style.left = `${x}px`;
+      damage.style.bottom = `${bottom}px`;
+      effects.appendChild(damage);
+
+      damage.addEventListener("animationend", () => {
+        damage.remove();
+      }, { once: true });
+    }
+
+    // 슬라임 타격 효과
     function showHitEffect(x, type) {
       const spark = document.createElement("div");
 
@@ -623,23 +734,14 @@
       spark.style.bottom = "88px";
       effects.appendChild(spark);
 
-      const damage = document.createElement("div");
-      damage.className = "damageNumber";
-      damage.textContent = "1";
-      damage.style.left = `${x}px`;
-      damage.style.bottom = "123px";
-      effects.appendChild(damage);
+      showDamageNumber(x, 123, "1", false);
 
       spark.addEventListener("animationend", () => {
         spark.remove();
       }, { once: true });
-
-      damage.addEventListener("animationend", () => {
-        damage.remove();
-      }, { once: true });
     }
 
-    // 밀려난 거리까지 포함한 슬라임의 표시 위치
+    // 밀려난 거리를 포함한 슬라임 위치
     function getSlimeDrawX() {
       return Math.max(
         0,
@@ -650,15 +752,15 @@
       );
     }
 
+    // 공격이 슬라임에 맞았는지 확인
     function checkAttackHit(now) {
-      if (!slimeAlive) {
+      if (!slimeAlive || heroHealthValue <= 0) {
         return;
       }
 
       const settings = attackSettings[currentAttackType];
       const targetX = getSlimeDrawX();
 
-      // 주인공이 바라보는 쪽에만 공격 범위를 만듦
       const attackLeft = attackDirection === 1
         ? heroX + heroWidth / 2
         : heroX - settings.reach;
@@ -671,7 +773,6 @@
         attackRight >= targetX &&
         attackLeft <= targetX + slimeWidth;
 
-      // 너무 높이 점프하면 땅에 있는 슬라임을 때릴 수 없음
       const verticalHit = heroY + 28 <= slimeHeight;
 
       if (!horizontalHit || !verticalHit) {
@@ -680,20 +781,19 @@
         return;
       }
 
-      slimeHealthValue -= 1;
+      slimeHealthValue = Math.max(0, slimeHealthValue - 1);
 
       showHitEffect(
         targetX + slimeWidth / 2,
         currentAttackType
       );
 
-      // 공격한 방향으로 슬라임을 밀어냄
       slimeKnockback =
         attackDirection * settings.knockback;
 
       restartAnimation(slimeBody, "hit");
 
-      if (slimeHealthValue <= 0) {
+      if (slimeHealthValue === 0) {
         slimeAlive = false;
         slimeReturnAt = now + 2000;
 
@@ -705,6 +805,105 @@
           `슬라임 체력 ${slimeHealthValue}/${slimeMaxHealth}`;
       }
     }
+
+    // 공격하지 않고 슬라임에 닿으면 주인공 피해
+    function checkHeroContact(now) {
+      if (
+        !slimeAlive ||
+        heroHealthValue <= 0 ||
+        now < heroInvincibleUntil
+      ) {
+        return;
+      }
+
+      // 공격 동작 중에는 접촉 피해 없음
+      if (now < attackEndAt) {
+        return;
+      }
+
+      const targetX = getSlimeDrawX();
+
+      // 캐릭터 그림의 빈 여백을 제외한 몸통 영역
+      const heroLeft = heroX + 22;
+      const heroRight = heroX + heroWidth - 22;
+      const heroBottom = heroY + 8;
+      const heroTop = heroY + 100;
+
+      const touching =
+        heroRight > targetX + 6 &&
+        heroLeft < targetX + slimeWidth - 6 &&
+        heroBottom < slimeHeight &&
+        heroTop > 0;
+
+      if (!touching) {
+        return;
+      }
+
+      heroHealthValue = Math.max(0, heroHealthValue - 1);
+
+      // 0.25초 동안 빨갛게 표시
+      heroHurtUntil = now + 250;
+
+      // 맞은 뒤 1초 동안 추가 피해 방지
+      heroInvincibleUntil = now + 1000;
+
+      updateHeroHealth();
+
+      showDamageNumber(
+        heroX + heroWidth / 2,
+        60 + heroY + 90,
+        "-1",
+        true
+      );
+
+      if (heroHealthValue === 0) {
+        clearInputs();
+        clearAttack();
+
+        restartButton.hidden = false;
+        message.textContent =
+          "체력이 다 떨어졌어! 다시 시작을 눌러 줘.";
+      } else {
+        message.textContent =
+          `앗! 슬라임에 닿았어! ` +
+          `체력 ${heroHealthValue}/${heroMaxHealth}`;
+      }
+    }
+
+    // 새로고침 없이 다시 시작
+    function restartGame() {
+      clearInputs();
+      clearAttack();
+
+      heroX = 30;
+      heroY = 0;
+      verticalSpeed = 0;
+      direction = 1;
+
+      heroHealthValue = heroMaxHealth;
+      heroHurtUntil = 0;
+      heroInvincibleUntil = 0;
+      hero.classList.remove("hurt");
+      updateHeroHealth();
+
+      nextAttackAt = 0;
+      attackDirection = 1;
+      currentAttackType = 1;
+
+      slimeHealthValue = slimeMaxHealth;
+      slimeAlive = true;
+      slimeReturnAt = 0;
+      slimeKnockback = 0;
+      slimeBody.classList.remove("hit");
+
+      effects.replaceChildren();
+      restartButton.hidden = true;
+
+      message.textContent =
+        "다시 시작! 슬라임을 보고 공격해 봐!";
+    }
+
+    restartButton.addEventListener("click", restartGame);
 
     heroIdle.addEventListener("animationend", () => {
       heroIdle.classList.remove("attackOne");
@@ -732,7 +931,17 @@
         return;
       }
 
+      // 다시 시작 버튼의 키보드 조작 허용
+      if (event.target === restartButton) {
+        return;
+      }
+
       event.preventDefault();
+
+      if (heroHealthValue <= 0) {
+        return;
+      }
+
       keys.add(event.code);
 
       if (event.repeat) {
@@ -754,17 +963,25 @@
 
     window.addEventListener("keyup", (event) => {
       if (gameKeys.includes(event.code)) {
-        event.preventDefault();
         keys.delete(event.code);
+
+        if (event.target !== restartButton) {
+          event.preventDefault();
+        }
       }
     });
 
-    // 이동 버튼은 손가락을 떼기 전까지 계속 이동
+    // 이동 버튼은 누르고 있는 동안 이동
     function connectMoveButton(buttonId, touches) {
       const button = document.getElementById(buttonId);
 
       button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
+
+        if (heroHealthValue <= 0) {
+          return;
+        }
+
         button.setPointerCapture(event.pointerId);
         touches.add(event.pointerId);
       });
@@ -787,7 +1004,6 @@
         action();
       });
 
-      // 키보드로 화면 버튼을 선택한 경우에도 실행
       button.addEventListener("click", (event) => {
         if (event.detail === 0) {
           action();
@@ -802,30 +1018,18 @@
     connectActionButton("attackOneButton", () => attack(1));
     connectActionButton("attackTwoButton", () => attack(2));
 
-    // 다른 화면으로 이동하면 입력을 해제
-    function clearInputs() {
-      keys.clear();
-      leftTouches.clear();
-      rightTouches.clear();
-    }
-
-    window.addEventListener("blur", clearInputs);
+    window.addEventListener("blur", () => {
+      clearInputs();
+      clearAttack();
+    });
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         clearInputs();
-
-        // 화면을 떠난 뒤 늦게 공격이 맞는 현상을 방지
-        pendingHitAt = null;
-        attackEndAt = 0;
-
-        hero.classList.remove("punching");
-        heroIdle.classList.remove("attackOne");
-        heroPunch.classList.remove("attackTwo");
+        clearAttack();
       }
     });
 
-    // 버튼을 길게 눌러도 메뉴가 뜨지 않게 함
     document.getElementById("controls")
       .addEventListener("contextmenu", (event) => {
         event.preventDefault();
@@ -834,13 +1038,17 @@
     let previousTime = performance.now();
 
     function gameLoop(now) {
-      // 기기 성능에 따라 이동 속도가 달라지지 않게 함
       const deltaTime = Math.min(
         (now - previousTime) / 1000,
         0.033
       );
 
       previousTime = now;
+
+      if (document.hidden) {
+        requestAnimationFrame(gameLoop);
+        return;
+      }
 
       const gameWidth = game.clientWidth;
 
@@ -851,7 +1059,6 @@
 
       const attacking = now < attackEndAt;
 
-      // 공격이 끝나면 원래 그림으로 복귀
       if (!attacking) {
         hero.classList.remove("punching");
       }
@@ -862,15 +1069,16 @@
       const moveRight =
         keys.has("ArrowRight") || rightTouches.size > 0;
 
-      // 공격 중에는 조금 천천히 이동
-      const currentSpeed = attacking
-        ? moveSpeed * 0.35
-        : moveSpeed;
+      const currentSpeed = heroHealthValue <= 0
+        ? 0
+        : attacking
+          ? moveSpeed * 0.35
+          : moveSpeed;
 
       if (moveLeft && !moveRight) {
         heroX -= currentSpeed * deltaTime;
 
-        if (!attacking) {
+        if (!attacking && heroHealthValue > 0) {
           direction = -1;
         }
       }
@@ -878,12 +1086,11 @@
       if (moveRight && !moveLeft) {
         heroX += currentSpeed * deltaTime;
 
-        if (!attacking) {
+        if (!attacking && heroHealthValue > 0) {
           direction = 1;
         }
       }
 
-      // 화면 밖으로 나가지 못하게 함
       heroX = Math.max(
         0,
         Math.min(gameWidth - heroWidth, heroX)
@@ -898,17 +1105,21 @@
         verticalSpeed = 0;
       }
 
-      // 밀려난 슬라임을 천천히 제자리로 되돌림
+      // 슬라임을 천천히 원래 위치로 되돌림
       slimeKnockback *= Math.exp(-10 * deltaTime);
 
-      // 공격 동작 중 정해진 순간에 한 번만 타격 판정
+      // 공격 한 번에 타격 판정 한 번
       if (pendingHitAt !== null && now >= pendingHitAt) {
         pendingHitAt = null;
         checkAttackHit(now);
       }
 
-      // 쓰러진 슬라임은 2초 후 다시 등장
-      if (!slimeAlive && now >= slimeReturnAt) {
+      // 슬라임은 쓰러진 뒤 2초 후 다시 등장
+      if (
+        !slimeAlive &&
+        now >= slimeReturnAt &&
+        heroHealthValue > 0
+      ) {
         slimeAlive = true;
         slimeHealthValue = slimeMaxHealth;
         slimeKnockback = 0;
@@ -917,8 +1128,12 @@
         message.textContent = "슬라임이 다시 나타났다!";
       }
 
-      // 주인공의 위치와 방향 표시
-      const drawDirection = attacking
+      // 접촉 피해와 피격 모습
+      checkHeroContact(now);
+      hero.classList.toggle("hurt", now < heroHurtUntil);
+
+      // 주인공 표시
+      const drawDirection = now < attackEndAt
         ? attackDirection
         : direction;
 
@@ -941,6 +1156,7 @@
       requestAnimationFrame(gameLoop);
     }
 
+    updateHeroHealth();
     requestAnimationFrame(gameLoop);
   </script>
 </body>
