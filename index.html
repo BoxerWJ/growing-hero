@@ -2,467 +2,87 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>우리의 성장 게임</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 12px;
-      background: #edf6ff;
-      color: #243349;
-      font-family: sans-serif;
-      text-align: center;
-    }
-
-    h1 {
-      margin: 8px 0 14px;
-      font-size: 25px;
-    }
-
-    #game {
-      position: relative;
-      width: 100%;
-      max-width: 900px;
-      height: 390px;
-      margin: 0 auto;
-      overflow: hidden;
-      border: 4px solid #34475e;
-      border-radius: 16px;
-      background: linear-gradient(#a9e2ff, #effbff);
-    }
-
-    #status {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 5;
-      padding: 8px 12px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.9);
-      text-align: left;
-      font-size: 14px;
-      font-weight: bold;
-      line-height: 1.5;
-      pointer-events: none;
-    }
-
-    #heroHealthBar {
-      width: 130px;
-      height: 12px;
-      margin-top: 4px;
-      overflow: hidden;
-      border: 2px solid #b64655;
-      border-radius: 8px;
-      background: #ead4d7;
-    }
-
-    #heroHealthFill {
-      width: 100%;
-      height: 100%;
-      background: #ff6576;
-      transition: width 150ms ease;
-    }
-
-    #restartButton {
-      margin-top: 8px;
-      padding: 7px 12px;
-      border: none;
-      border-radius: 8px;
-      background: #ffd078;
-      color: #243349;
-      font-weight: bold;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
-    #message {
-      position: absolute;
-      top: 175px;
-      left: 0;
-      z-index: 5;
-      width: 100%;
-      padding: 0 12px;
-      font-weight: bold;
-      color: #36536e;
-      text-shadow: 0 1px 2px white;
-      pointer-events: none;
-    }
-
-    #ground {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      height: 60px;
-      border-top: 10px solid #75bc55;
-      background: #b88755;
-    }
-
-    #hero {
-      position: absolute;
-      bottom: 56px;
-      left: 0;
-      width: 90px;
-      height: 110px;
-      z-index: 3;
-      pointer-events: none;
-    }
-
-    .heroImage {
-      position: absolute;
-      inset: 0;
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      object-position: center bottom;
-      transform-origin: 50% 90%;
-      visibility: hidden;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    .heroImage.visible {
-      visibility: visible;
-    }
-
-    #hero.hurt .heroImage {
-      filter: brightness(0.65) sepia(1)
-              saturate(12) hue-rotate(-35deg);
-    }
-
-    #heroDead {
-      inset: auto;
-      left: 50%;
-      bottom: 0;
-      width: 150px;
-      height: 100px;
-      transform: translateX(-50%);
-      object-fit: contain;
-      object-position: center bottom;
-    }
-
-    #hero.deadFallback #heroIdle {
-      transform: translateY(15px) rotate(80deg);
-      filter: grayscale(0.7);
-    }
-
-    #heroIdle.attackOne {
-      animation: heroAttackOne 280ms ease-out;
-    }
-
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; background: #edf6ff; color: #243349; font-family: sans-serif; text-align: center; }
+    h1 { margin: 8px 0 14px; font-size: 25px; }
+    #game { position: relative; width: 100%; max-width: 900px; height: 390px; margin: 0 auto; overflow: hidden; border: 4px solid #34475e; border-radius: 16px; background: linear-gradient(#a9e2ff, #effbff); }
+    #status { position: absolute; top: 10px; left: 10px; z-index: 5; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.9); text-align: left; font-size: 14px; font-weight: bold; line-height: 1.5; pointer-events: none; }
+    #heroHealthBar { width: 130px; height: 12px; margin-top: 4px; overflow: hidden; border: 2px solid #b64655; border-radius: 8px; background: #ead4d7; }
+    #heroHealthFill { width: 100%; height: 100%; background: #ff6576; transition: width 150ms ease; }
+    #restartButton { margin-top: 8px; padding: 7px 12px; border: none; border-radius: 8px; background: #ffd078; color: #243349; font-weight: bold; cursor: pointer; pointer-events: auto; }
+    #message { position: absolute; top: 175px; left: 0; z-index: 5; width: 100%; padding: 0 12px; font-weight: bold; color: #36536e; text-shadow: 0 1px 2px white; pointer-events: none; }
+    #ground { position: absolute; right: 0; bottom: 0; left: 0; height: 60px; border-top: 10px solid #75bc55; background: #b88755; }
+    #hero { position: absolute; bottom: 56px; left: 0; width: 90px; height: 110px; z-index: 3; pointer-events: none; }
+    .heroImage { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; transform-origin: 50% 90%; visibility: hidden; user-select: none; -webkit-user-drag: none; }
+    .heroImage.visible { visibility: visible; }
+    #hero.hurt .heroImage { filter: brightness(.65) sepia(1) saturate(12) hue-rotate(-35deg); }
+    #heroDead { inset: auto; left: 50%; bottom: 0; width: 150px; height: 100px; transform: translateX(-50%); object-fit: contain; object-position: center bottom; }
+    #hero.deadFallback #heroIdle { transform: translateY(15px) rotate(80deg); filter: grayscale(.7); }
+    #heroIdle.attackOne { animation: heroAttackOne 280ms ease-out; }
     @keyframes heroAttackOne {
-      0%, 100% {
-        transform: translateX(0) rotate(0deg);
-      }
-      20% {
-        transform: translateX(-8px) rotate(-10deg);
-      }
-      45% {
-        transform: translateX(23px) rotate(15deg)
-                   scale(1.07, 0.95);
-      }
-      65% {
-        transform: translateX(17px) rotate(9deg);
-      }
+      0%,100% { transform: translateX(0) rotate(0deg); }
+      20% { transform: translateX(-8px) rotate(-10deg); }
+      45% { transform: translateX(23px) rotate(15deg) scale(1.07,.95); }
+      65% { transform: translateX(17px) rotate(9deg); }
     }
-
-    #heroPunch.attackTwo {
-      animation: heroAttackTwo 320ms ease-out;
-    }
-
+    #heroPunch.attackTwo { animation: heroAttackTwo 320ms ease-out; }
     @keyframes heroAttackTwo {
-      0% {
-        transform: translateX(-6px) rotate(-4deg);
-      }
-      35%, 60% {
-        transform: translateX(18px) rotate(3deg);
-      }
-      100% {
-        transform: translateX(0) rotate(0deg);
-      }
+      0% { transform: translateX(-6px) rotate(-4deg); }
+      35%,60% { transform: translateX(18px) rotate(3deg); }
+      100% { transform: translateX(0) rotate(0deg); }
     }
-
-    .slime {
-      position: absolute;
-      bottom: 60px;
-      width: 68px;
-      height: 54px;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .slimeBody {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      border: 3px solid #329343;
-      border-radius: 50% 50% 35% 35%;
-      background:
-        radial-gradient(
-          ellipse at 30% 24%,
-          #caffaa 0%,
-          #7be36b 42%,
-          #58c954 100%
-        );
-      transform-origin: center bottom;
-      will-change: transform;
-    }
-
-    .slimeBody::before,
-    .slimeBody::after {
-      content: "";
-      position: absolute;
-      top: 20px;
-      width: 7px;
-      height: 10px;
-      border-radius: 50%;
-      background: #203329;
-    }
-
-    .slimeBody::before {
-      left: 19px;
-    }
-
-    .slimeBody::after {
-      right: 19px;
-    }
-
-    .slimeBody.hit {
-      animation: slimeHit 260ms ease-out;
-    }
-
+    .slime { position: absolute; bottom: 60px; width: 68px; height: 54px; z-index: 2; pointer-events: none; }
+    .slimeBody { position: relative; width: 100%; height: 100%; border: 3px solid #329343; border-radius: 50% 50% 35% 35%; background: radial-gradient(ellipse at 30% 24%, #caffaa 0%, #7be36b 42%, #58c954 100%); transform-origin: center bottom; will-change: transform; }
+    .slimeBody::before,.slimeBody::after { content: ""; position: absolute; top: 20px; width: 7px; height: 10px; border-radius: 50%; background: #203329; }
+    .slimeBody::before { left: 19px; }
+    .slimeBody::after { right: 19px; }
+    .slimeBody.hit { animation: slimeHit 260ms ease-out; }
     @keyframes slimeHit {
-      0% {
-        filter: brightness(4);
-        transform: scale(1.3, 0.65);
-      }
-      40% {
-        filter: brightness(2);
-        transform: scale(0.85, 1.15);
-      }
-      100% {
-        filter: brightness(1);
-        transform: scale(1, 1);
-      }
+      0% { filter: brightness(4); transform: scale(1.3,.65); }
+      40% { filter: brightness(2); transform: scale(.85,1.15); }
+      100% { filter: brightness(1); transform: scale(1,1); }
     }
-
-    .slimeHealth {
-      position: absolute;
-      left: 0;
-      bottom: 65px;
-      width: 68px;
-      height: 9px;
-      overflow: hidden;
-      border: 2px solid white;
-      border-radius: 8px;
-      background: #56616c;
-    }
-
-    .slimeHealthFill {
-      width: 100%;
-      height: 100%;
-      background: #ff6576;
-      transition: width 120ms ease;
-    }
-
-    #effects {
-      position: absolute;
-      inset: 0;
-      z-index: 4;
-      pointer-events: none;
-    }
-
-    .hitSpark {
-      position: absolute;
-      width: 58px;
-      height: 58px;
-      background: #fff4a6;
-      clip-path: polygon(
-        50% 0%, 61% 30%, 85% 10%, 73% 39%,
-        100% 50%, 73% 61%, 85% 90%, 61% 73%,
-        50% 100%, 39% 73%, 15% 90%, 27% 61%,
-        0% 50%, 27% 39%, 15% 10%, 39% 30%
-      );
-      animation: sparkPop 260ms ease-out forwards;
-    }
-
-    .hitSpark.punchSpark {
-      background: #ffc16b;
-    }
-
+    .slimeHealth { position: absolute; left: 0; bottom: 65px; width: 68px; height: 9px; overflow: hidden; border: 2px solid white; border-radius: 8px; background: #56616c; }
+    .slimeHealthFill { width: 100%; height: 100%; background: #ff6576; transition: width 120ms ease; }
+    #effects { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+    .hitSpark { position: absolute; width: 58px; height: 58px; background: #fff4a6; clip-path: polygon(50% 0%,61% 30%,85% 10%,73% 39%,100% 50%,73% 61%,85% 90%,61% 73%,50% 100%,39% 73%,15% 90%,27% 61%,0% 50%,27% 39%,15% 10%,39% 30%); animation: sparkPop 260ms ease-out forwards; }
+    .hitSpark.punchSpark { background: #ffc16b; }
     @keyframes sparkPop {
-      0% {
-        opacity: 1;
-        transform: translate(-50%, 50%) scale(0.3)
-                   rotate(-15deg);
-      }
-      45% {
-        opacity: 1;
-        transform: translate(-50%, 50%) scale(1.2)
-                   rotate(10deg);
-      }
-      100% {
-        opacity: 0;
-        transform: translate(-50%, 50%) scale(1.5)
-                   rotate(25deg);
-      }
+      0% { opacity: 1; transform: translate(-50%,50%) scale(.3) rotate(-15deg); }
+      45% { opacity: 1; transform: translate(-50%,50%) scale(1.2) rotate(10deg); }
+      100% { opacity: 0; transform: translate(-50%,50%) scale(1.5) rotate(25deg); }
     }
-
-    .damageNumber {
-      position: absolute;
-      color: #ffcf42;
-      font-size: 32px;
-      font-weight: 900;
-      text-shadow:
-        -2px -2px 0 #773d22,
-        2px -2px 0 #773d22,
-        -2px 2px 0 #773d22,
-        2px 2px 0 #773d22;
-      animation: damageFloat 650ms ease-out forwards;
-    }
-
-    .damageNumber.heroDamage {
-      color: #ff5353;
-      font-size: 28px;
-      text-shadow:
-        -1px -1px 0 white,
-        1px -1px 0 white,
-        -1px 1px 0 white,
-        1px 1px 0 white;
-    }
-
+    .damageNumber { position: absolute; color: #ffcf42; font-size: 32px; font-weight: 900; text-shadow: -2px -2px 0 #773d22,2px -2px 0 #773d22,-2px 2px 0 #773d22,2px 2px 0 #773d22; animation: damageFloat 650ms ease-out forwards; }
+    .damageNumber.heroDamage { color: #ff5353; font-size: 28px; text-shadow: -1px -1px 0 white,1px -1px 0 white,-1px 1px 0 white,1px 1px 0 white; }
     @keyframes damageFloat {
-      0% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0) scale(0.7);
-      }
-      25% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(-18px) scale(1.2);
-      }
-      100% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-60px) scale(1);
-      }
+      0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(.7); }
+      25% { opacity: 1; transform: translateX(-50%) translateY(-18px) scale(1.2); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(1); }
     }
-
-    #controls {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      width: 100%;
-      max-width: 900px;
-      margin: 16px auto 0;
-    }
-
-    .buttonGroup {
-      display: flex;
-      gap: 8px;
-    }
-
-    .controlButton {
-      width: 64px;
-      height: 64px;
-      padding: 0;
-      border: none;
-      border-bottom: 5px solid #537ba7;
-      border-radius: 15px;
-      background: #80b5ee;
-      color: #172b45;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-    }
-
-    .controlButton:active {
-      transform: translateY(3px);
-      border-bottom-width: 2px;
-    }
-
-    #attackOneButton {
-      border-bottom-color: #c28331;
-      background: #ffd078;
-    }
-
-    #attackTwoButton {
-      border-bottom-color: #c2673d;
-      background: #ffa878;
-    }
-
-    #saveControls {
-      margin: 16px auto 0;
-    }
-
-    .saveButton {
-      padding: 10px 18px;
-      margin: 0 4px;
-      border: none;
-      border-bottom: 4px solid #568268;
-      border-radius: 10px;
-      background: #b7e6c6;
-      color: #243349;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-
-    .saveButton:active {
-      transform: translateY(2px);
-      border-bottom-width: 2px;
-    }
-
-    #loadButton {
-      background: #c8dcff;
-      border-bottom-color: #708bb3;
-    }
-
-    #saveStatus {
-      min-height: 20px;
-      margin: 8px 0;
-      color: #36536e;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    #help {
-      font-size: 14px;
-      line-height: 1.7;
-    }
-
+    #controls { display: flex; justify-content: space-between; gap: 8px; width: 100%; max-width: 900px; margin: 16px auto 0; }
+    .buttonGroup { display: flex; gap: 8px; }
+    .controlButton { width: 64px; height: 64px; padding: 0; border: none; border-bottom: 5px solid #537ba7; border-radius: 15px; background: #80b5ee; color: #172b45; font-size: 18px; font-weight: bold; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    .controlButton:active { transform: translateY(3px); border-bottom-width: 2px; }
+    #attackOneButton { border-bottom-color: #c28331; background: #ffd078; }
+    #attackTwoButton { border-bottom-color: #c2673d; background: #ffa878; }
+    #saveControls { margin: 16px auto 0; }
+    .saveButton { padding: 10px 18px; margin: 0 4px; border: none; border-bottom: 4px solid #568268; border-radius: 10px; background: #b7e6c6; color: #243349; font-size: 15px; font-weight: bold; cursor: pointer; touch-action: manipulation; }
+    .saveButton:active { transform: translateY(2px); border-bottom-width: 2px; }
+    #loadButton { background: #c8dcff; border-bottom-color: #708bb3; }
+    #saveStatus { min-height: 20px; margin: 8px 0; color: #36536e; font-size: 13px; line-height: 1.6; }
+    #help { font-size: 14px; line-height: 1.7; }
     @media (max-width: 420px) {
-      body {
-        padding: 8px;
-      }
-
-      .controlButton {
-        width: 50px;
-        height: 60px;
-        font-size: 15px;
-      }
-
-      .buttonGroup,
-      #controls {
-        gap: 4px;
-      }
+      body { padding: 8px; }
+      .controlButton { width: 50px; height: 60px; font-size: 15px; }
+      .buttonGroup,#controls { gap: 4px; }
     }
   </style>
 </head>
-
 <body>
   <h1>🌱 우리의 성장 게임</h1>
-
   <div id="game">
     <div id="status">
       레벨 <span id="level">1</span><br>
@@ -471,81 +91,47 @@
       등장한 슬라임 <span id="spawned">0</span>/20<br>
       <span id="spawnInfo">다음 등장까지 5초</span><br>
       ❤️ 체력 <span id="heroHealthText">10</span>/10
-
-      <div id="heroHealthBar">
-        <div id="heroHealthFill"></div>
-      </div>
-
+      <div id="heroHealthBar"><div id="heroHealthFill"></div></div>
       <button id="restartButton" hidden>다시 시작</button>
     </div>
-
-    <div id="message" role="status">
-      슬라임 20마리를 모두 잡으면 레벨 2!
-    </div>
-
+    <div id="message" role="status">슬라임 20마리를 모두 잡으면 레벨 2!</div>
     <div id="ground"></div>
-
     <div id="hero" role="img" aria-label="우리의 주인공">
-      <img id="heroIdle" class="heroImage visible"
-           src="hero.png" alt="" aria-hidden="true">
-      <img id="heroWalk1" class="heroImage"
-           src="hero-walk1.png" alt="" aria-hidden="true">
-      <img id="heroWalk2" class="heroImage"
-           src="hero-walk2.png" alt="" aria-hidden="true">
-      <img id="heroJump" class="heroImage"
-           src="hero-jump.png" alt="" aria-hidden="true">
-      <img id="heroPunch" class="heroImage"
-           src="hero-attack2.png" alt="" aria-hidden="true">
-      <img id="heroHit" class="heroImage"
-           src="hero-hit.png" alt="" aria-hidden="true">
-      <img id="heroDead" class="heroImage"
-           src="hero-dead.png" alt="" aria-hidden="true">
+      <img id="heroIdle" class="heroImage visible" src="images/char/level1/hero.png" alt="" aria-hidden="true">
+      <img id="heroWalk1" class="heroImage" src="images/char/level1/hero-walk1.png" alt="" aria-hidden="true">
+      <img id="heroWalk2" class="heroImage" src="images/char/level1/hero-walk2.png" alt="" aria-hidden="true">
+      <img id="heroJump" class="heroImage" src="images/char/level1/hero-jump.png" alt="" aria-hidden="true">
+      <img id="heroPunch" class="heroImage" src="images/char/level1/hero-attack2.png" alt="" aria-hidden="true">
+      <img id="heroHit" class="heroImage" src="images/char/level1/hero-hit.png" alt="" aria-hidden="true">
+      <img id="heroDead" class="heroImage" src="images/char/level1/hero-dead.png" alt="" aria-hidden="true">
     </div>
-
     <div id="effects"></div>
   </div>
-
   <div id="controls">
     <div class="buttonGroup">
-      <button id="leftButton" class="controlButton"
-              aria-label="왼쪽 이동">◀</button>
-      <button id="rightButton" class="controlButton"
-              aria-label="오른쪽 이동">▶</button>
+      <button id="leftButton" class="controlButton" aria-label="왼쪽 이동">◀</button>
+      <button id="rightButton" class="controlButton" aria-label="오른쪽 이동">▶</button>
     </div>
-
     <div class="buttonGroup">
-      <button id="attackOneButton"
-              class="controlButton">공격 1</button>
-      <button id="attackTwoButton"
-              class="controlButton">공격 2</button>
-      <button id="jumpButton"
-              class="controlButton">점프</button>
+      <button id="attackOneButton" class="controlButton">공격 1</button>
+      <button id="attackTwoButton" class="controlButton">공격 2</button>
+      <button id="jumpButton" class="controlButton">점프</button>
     </div>
   </div>
-
   <div id="saveControls">
-    <button id="saveButton" class="saveButton"
-            type="button">💾 저장</button>
-    <button id="loadButton" class="saveButton"
-            type="button">📂 불러오기</button>
-    <button id="newGameButton" class="saveButton"
-            type="button">🌱 처음부터</button>
-
-    <p id="saveStatus" role="status">
-      아직 저장된 기록이 없어.
-    </p>
+    <button id="saveButton" class="saveButton" type="button">💾 저장</button>
+    <button id="loadButton" class="saveButton" type="button">📂 불러오기</button>
+    <button id="newGameButton" class="saveButton" type="button">🌱 처음부터</button>
+    <p id="saveStatus" role="status">아직 저장된 기록이 없어.</p>
   </div>
-
   <p id="help">
     방향키: 이동 · 스페이스바: 점프<br>
     Z키: 공격 1 · X키: 공격 2<br>
     휴대폰에서는 화면 버튼을 눌러 줘!<br>
     💾 레벨업할 때 자동 저장 · 원할 때 저장 버튼 사용
   </p>
-
   <script>
     const get = (id) => document.getElementById(id);
-
     const game = get("game");
     const hero = get("hero");
     const heroIdle = get("heroIdle");
@@ -555,84 +141,51 @@
     const heroPunch = get("heroPunch");
     const heroHit = get("heroHit");
     const heroDead = get("heroDead");
-
-    const heroImages = [
-      heroIdle, heroWalk1, heroWalk2,
-      heroJump, heroPunch, heroHit, heroDead
-    ];
-
+    const heroImages = [heroIdle, heroWalk1, heroWalk2, heroJump, heroPunch, heroHit, heroDead];
     const heroHealthText = get("heroHealthText");
     const heroHealthFill = get("heroHealthFill");
     const restartButton = get("restartButton");
     const effects = get("effects");
     const message = get("message");
     const saveStatus = get("saveStatus");
-
     const groundHeight = 60;
     const heroWidth = 90;
     const heroFootOffset = 4;
     const deadFootOffset = 3;
-
     const moveSpeed = 250;
     const jumpPower = 620;
     const gravity = 1700;
     const heroMaxHealth = 10;
-
     let heroX = 30;
     let heroY = 0;
     let verticalSpeed = 0;
     let direction = 1;
     let walkTime = 0;
-
     let heroHealthValue = heroMaxHealth;
     let heroHurtUntil = 0;
     let heroInvincibleUntil = 0;
-
     const keys = new Set();
     const leftTouches = new Set();
     const rightTouches = new Set();
-
-    // 슬라임 등장 규칙
     const slimeWidth = 68;
     const slimeHeight = 54;
     const slimeMaxHealth = 3;
     const slimeMoveSpeed = 65;
     const maxSlimes = 20;
     const spawnInterval = 5;
-
     let slimes = [];
     let spawnedCount = 0;
     let defeatedCount = 0;
     let spawnElapsed = 0;
     let level = 1;
-
-    // 다른 탭을 보는 동안에는 게임 시간도 멈춤
     let gameTime = 0;
     let previousTime = performance.now();
-
-    // 이전 세이브 코드와 같은 저장 공간 사용
     const saveKey = "growing-hero-save-v1";
-
-    // 읽지 못한 저장 기록의 자동 덮어쓰기 방지
     let saveBlocked = false;
-
     const attackSettings = {
-      1: {
-        duration: 280,
-        cooldown: 380,
-        impactDelay: 110,
-        reach: 55,
-        knockback: 30
-      },
-      2: {
-        duration: 320,
-        cooldown: 430,
-        impactDelay: 115,
-        reach: 55,
-        knockback: 40
-      }
+      1: { duration: 280, cooldown: 380, impactDelay: 110, reach: 55, knockback: 30 },
+      2: { duration: 320, cooldown: 430, impactDelay: 115, reach: 55, knockback: 40 }
     };
-
     let attackEndAt = 0;
     let nextAttackAt = 0;
     let pendingHitAt = null;
@@ -642,1100 +195,509 @@
     function imageReady(image) {
       return image.complete && image.naturalWidth > 0;
     }
-
     function showHeroImage(image) {
       const selected = imageReady(image) ? image : heroIdle;
-
-      heroImages.forEach((item) => {
-        item.classList.toggle("visible", item === selected);
-      });
+      heroImages.forEach((item) => item.classList.toggle("visible", item === selected));
     }
-
     heroImages.forEach((image) => {
       image.addEventListener("error", () => {
         if (heroHealthValue > 0) {
-          message.textContent =
-            `${image.getAttribute("src")} 파일 이름과 업로드를 확인해 줘!`;
+          message.textContent = `${image.getAttribute("src")} 파일 이름과 업로드를 확인해 줘!`;
         }
       });
     });
-
     function clearInputs() {
-      keys.clear();
-      leftTouches.clear();
-      rightTouches.clear();
+      keys.clear(); leftTouches.clear(); rightTouches.clear();
     }
-
     function clearAttack() {
       pendingHitAt = null;
       attackEndAt = 0;
       heroIdle.classList.remove("attackOne");
       heroPunch.classList.remove("attackTwo");
     }
-
     function updateHeroHealth() {
       heroHealthText.textContent = heroHealthValue;
-      heroHealthFill.style.width =
-        `${heroHealthValue / heroMaxHealth * 100}%`;
+      heroHealthFill.style.width = `${heroHealthValue / heroMaxHealth * 100}%`;
     }
-
     function updateProgress() {
       get("level").textContent = level;
       get("experience").textContent = defeatedCount;
       get("defeated").textContent = defeatedCount;
       get("spawned").textContent = spawnedCount;
-
       if (level === 2) {
         get("spawnInfo").textContent = "🎉 레벨 1 완료!";
       } else if (heroHealthValue <= 0) {
         get("spawnInfo").textContent = "다시 도전해 보자!";
       } else if (spawnedCount >= maxSlimes) {
-        get("spawnInfo").textContent =
-          `남은 슬라임 ${slimes.length}마리`;
+        get("spawnInfo").textContent = `남은 슬라임 ${slimes.length}마리`;
       } else {
-        const seconds = Math.max(
-          1,
-          Math.ceil(spawnInterval - spawnElapsed)
-        );
-
-        get("spawnInfo").textContent =
-          `다음 등장까지 ${seconds}초`;
+        const seconds = Math.max(1, Math.ceil(spawnInterval - spawnElapsed));
+        get("spawnInfo").textContent = `다음 등장까지 ${seconds}초`;
       }
     }
-
     function restartAnimation(element, className) {
       element.classList.remove(className);
       void element.offsetWidth;
       element.classList.add(className);
     }
-
-    // 슬라임 한 마리 생성
     function spawnSlime(now) {
-      if (spawnedCount >= maxSlimes || level !== 1) {
-        return;
-      }
-
+      if (spawnedCount >= maxSlimes || level !== 1) return;
       const element = document.createElement("div");
       element.className = "slime";
-
       const body = document.createElement("div");
       body.className = "slimeBody";
-
       const healthBar = document.createElement("div");
       healthBar.className = "slimeHealth";
-
       const healthFill = document.createElement("div");
       healthFill.className = "slimeHealthFill";
-
       healthBar.appendChild(healthFill);
       element.append(body, healthBar);
       game.insertBefore(element, effects);
-
-      const maxX = Math.max(
-        0,
-        game.clientWidth - slimeWidth
-      );
-
+      const maxX = Math.max(0, game.clientWidth - slimeWidth);
       let x;
-
       if (spawnedCount === 0) {
         x = Math.min(maxX, game.clientWidth * 0.75);
       } else {
         x = heroX + heroWidth / 2 < game.clientWidth / 2
-          ? Math.max(0, maxX - 18)
-          : Math.min(18, maxX);
+          ? Math.max(0, maxX - 18) : Math.min(18, maxX);
       }
-
       const slime = {
-        element,
-        body,
-        healthFill,
-        x,
-        health: slimeMaxHealth,
-        knockback: 0,
-        direction: x > heroX ? -1 : 1,
-        pauseUntil: now + 600,
-        hurtUntil: 0,
-        motionTime: Math.random() * 5,
-        moving: false
+        element, body, healthFill, x, health: slimeMaxHealth,
+        knockback: 0, direction: x > heroX ? -1 : 1,
+        pauseUntil: now + 600, hurtUntil: 0,
+        motionTime: Math.random() * 5, moving: false
       };
-
-      body.addEventListener("animationend", () => {
-        body.classList.remove("hit");
-      });
-
+      body.addEventListener("animationend", () => body.classList.remove("hit"));
       slimes.push(slime);
       spawnedCount++;
-
       drawSlime(slime, now);
-
       if (spawnedCount > 1) {
-        message.textContent =
-          `슬라임 등장! 지금까지 ${spawnedCount}/${maxSlimes}마리`;
+        message.textContent = `슬라임 등장! 지금까지 ${spawnedCount}/${maxSlimes}마리`;
       }
-
       updateProgress();
     }
-
     function getSlimeDrawX(slime) {
-      const maxX = Math.max(
-        0,
-        game.clientWidth - slimeWidth
-      );
-
-      return Math.max(
-        0,
-        Math.min(maxX, slime.x + slime.knockback)
-      );
+      const maxX = Math.max(0, game.clientWidth - slimeWidth);
+      return Math.max(0, Math.min(maxX, slime.x + slime.knockback));
     }
-
     function updateSlimeMovement(slime, now, deltaTime) {
-      const maxX = Math.max(
-        0,
-        game.clientWidth - slimeWidth
-      );
-
+      const maxX = Math.max(0, game.clientWidth - slimeWidth);
       slime.x = Math.max(0, Math.min(maxX, slime.x));
-
       const margin = Math.min(18, maxX / 2);
       const leftLimit = margin;
       const rightLimit = maxX - margin;
-
-      slime.moving =
-        heroHealthValue > 0 &&
-        now >= slime.pauseUntil &&
-        now >= slime.hurtUntil &&
-        rightLimit > leftLimit;
-
-      if (!slime.moving) {
-        return;
-      }
-
+      slime.moving = heroHealthValue > 0 && now >= slime.pauseUntil &&
+        now >= slime.hurtUntil && rightLimit > leftLimit;
+      if (!slime.moving) return;
       slime.motionTime += deltaTime;
-
-      const speedWave =
-        0.85 + Math.sin(slime.motionTime * 7) * 0.15;
-
-      slime.x +=
-        slime.direction *
-        slimeMoveSpeed *
-        speedWave *
-        deltaTime;
-
+      const speedWave = 0.85 + Math.sin(slime.motionTime * 7) * 0.15;
+      slime.x += slime.direction * slimeMoveSpeed * speedWave * deltaTime;
       if (slime.x <= leftLimit) {
-        slime.x = leftLimit;
-        slime.direction = 1;
-        slime.pauseUntil = now + 500;
-        slime.moving = false;
+        slime.x = leftLimit; slime.direction = 1;
+        slime.pauseUntil = now + 500; slime.moving = false;
       } else if (slime.x >= rightLimit) {
-        slime.x = rightLimit;
-        slime.direction = -1;
-        slime.pauseUntil = now + 500;
-        slime.moving = false;
+        slime.x = rightLimit; slime.direction = -1;
+        slime.pauseUntil = now + 500; slime.moving = false;
       }
     }
-
     function updateSlimeShape(slime, now) {
-      if (now < slime.hurtUntil) {
-        return;
-      }
-
+      if (now < slime.hurtUntil) return;
       const wave = Math.sin(slime.motionTime * 9);
-
       if (slime.moving) {
         const stretch = 1.10 + wave * 0.08;
         const lean = slime.direction * (7 + wave * 3);
-
-        slime.body.style.transform =
-          `skewX(${lean}deg) scale(${stretch}, ${1 / stretch})`;
-
-        slime.body.style.borderRadius =
-          slime.direction === 1
-            ? "58% 72% 32% 42% / 75% 85% 22% 20%"
-            : "72% 58% 42% 32% / 85% 75% 20% 22%";
+        slime.body.style.transform = `skewX(${lean}deg) scale(${stretch}, ${1 / stretch})`;
+        slime.body.style.borderRadius = slime.direction === 1
+          ? "58% 72% 32% 42% / 75% 85% 22% 20%"
+          : "72% 58% 42% 32% / 85% 75% 20% 22%";
       } else {
-        const stretch =
-          1 + Math.sin(now / 320 + slime.motionTime) * 0.025;
-
-        slime.body.style.transform =
-          `scale(${stretch}, ${1 / stretch})`;
-
-        slime.body.style.borderRadius =
-          "50% 50% 35% 35%";
+        const stretch = 1 + Math.sin(now / 320 + slime.motionTime) * 0.025;
+        slime.body.style.transform = `scale(${stretch}, ${1 / stretch})`;
+        slime.body.style.borderRadius = "50% 50% 35% 35%";
       }
     }
-
     function drawSlime(slime, now) {
       slime.element.style.left = `${getSlimeDrawX(slime)}px`;
-      slime.healthFill.style.width =
-        `${slime.health / slimeMaxHealth * 100}%`;
-
+      slime.healthFill.style.width = `${slime.health / slimeMaxHealth * 100}%`;
       updateSlimeShape(slime, now);
     }
-
     function jump() {
-      if (
-        heroHealthValue <= 0 ||
-        gameTime < heroHurtUntil
-      ) {
-        return;
-      }
-
-      if (heroY === 0) {
-        verticalSpeed = jumpPower;
-      }
+      if (heroHealthValue <= 0 || gameTime < heroHurtUntil) return;
+      if (heroY === 0) verticalSpeed = jumpPower;
     }
-
     function attack(type) {
       const now = gameTime;
-
-      if (
-        heroHealthValue <= 0 ||
-        now < heroHurtUntil ||
-        now < nextAttackAt
-      ) {
-        return;
-      }
-
+      if (heroHealthValue <= 0 || now < heroHurtUntil || now < nextAttackAt) return;
       if (type === 2 && !imageReady(heroPunch)) {
-        message.textContent =
-          "hero-attack2.png 파일 이름과 업로드를 확인해 줘!";
+        message.textContent = "images/char/level1/hero-attack2.png 파일 이름과 업로드를 확인해 줘!";
         return;
       }
-
       const settings = attackSettings[type];
-
       currentAttackType = type;
       attackDirection = direction;
       attackEndAt = now + settings.duration;
       nextAttackAt = now + settings.cooldown;
       pendingHitAt = now + settings.impactDelay;
-
       heroIdle.classList.remove("attackOne");
       heroPunch.classList.remove("attackTwo");
-
       if (type === 1) {
-        showHeroImage(heroIdle);
-        restartAnimation(heroIdle, "attackOne");
+        showHeroImage(heroIdle); restartAnimation(heroIdle, "attackOne");
       } else {
-        showHeroImage(heroPunch);
-        restartAnimation(heroPunch, "attackTwo");
+        showHeroImage(heroPunch); restartAnimation(heroPunch, "attackTwo");
       }
     }
-
     function showDamageNumber(x, bottom, text, isHero) {
       const damage = document.createElement("div");
-
-      damage.className = isHero
-        ? "damageNumber heroDamage"
-        : "damageNumber";
-
+      damage.className = isHero ? "damageNumber heroDamage" : "damageNumber";
       damage.textContent = text;
       damage.style.left = `${x}px`;
       damage.style.bottom = `${bottom}px`;
-
       effects.appendChild(damage);
-
-      damage.addEventListener("animationend", () => {
-        damage.remove();
-      }, { once: true });
+      damage.addEventListener("animationend", () => damage.remove(), { once: true });
     }
-
     function showHitEffect(x, type) {
       const spark = document.createElement("div");
-
-      spark.className = type === 2
-        ? "hitSpark punchSpark"
-        : "hitSpark";
-
+      spark.className = type === 2 ? "hitSpark punchSpark" : "hitSpark";
       spark.style.left = `${x}px`;
       spark.style.bottom = "88px";
-
       effects.appendChild(spark);
       showDamageNumber(x, 123, "1", false);
-
-      spark.addEventListener("animationend", () => {
-        spark.remove();
-      }, { once: true });
+      spark.addEventListener("animationend", () => spark.remove(), { once: true });
     }
-
     function checkAttackHit(now) {
-      if (heroHealthValue <= 0 || level !== 1) {
-        return;
-      }
-
+      if (heroHealthValue <= 0 || level !== 1) return;
       const settings = attackSettings[currentAttackType];
-
-      const attackLeft = attackDirection === 1
-        ? heroX + heroWidth / 2
-        : heroX - settings.reach;
-
-      const attackRight = attackDirection === 1
-        ? heroX + heroWidth + settings.reach
-        : heroX + heroWidth / 2;
-
-      const verticalHit =
-        heroY + 28 - heroFootOffset <= slimeHeight;
-
+      const attackLeft = attackDirection === 1 ? heroX + heroWidth / 2 : heroX - settings.reach;
+      const attackRight = attackDirection === 1 ? heroX + heroWidth + settings.reach : heroX + heroWidth / 2;
+      const verticalHit = heroY + 28 - heroFootOffset <= slimeHeight;
       let hitCount = 0;
       let killedCount = 0;
-
       for (const slime of slimes) {
         const targetX = getSlimeDrawX(slime);
-
-        const horizontalHit =
-          attackRight >= targetX &&
-          attackLeft <= targetX + slimeWidth;
-
-        if (!horizontalHit || !verticalHit) {
-          continue;
-        }
-
+        const horizontalHit = attackRight >= targetX && attackLeft <= targetX + slimeWidth;
+        if (!horizontalHit || !verticalHit) continue;
         hitCount++;
         slime.health = Math.max(0, slime.health - 1);
-
-        showHitEffect(
-          targetX + slimeWidth / 2,
-          currentAttackType
-        );
-
-        slime.knockback =
-          attackDirection * settings.knockback;
-
+        showHitEffect(targetX + slimeWidth / 2, currentAttackType);
+        slime.knockback = attackDirection * settings.knockback;
         slime.hurtUntil = now + 280;
         slime.moving = false;
-
         restartAnimation(slime.body, "hit");
-
         if (slime.health === 0) {
-          slime.element.remove();
-          defeatedCount++;
-          killedCount++;
+          slime.element.remove(); defeatedCount++; killedCount++;
         }
       }
-
       slimes = slimes.filter((slime) => slime.health > 0);
-
       if (defeatedCount === maxSlimes) {
         level = 2;
-
-        message.textContent =
-          "🎉 슬라임 20마리 모두 처치! 레벨 2가 되었어!";
-
-        // 자동 저장은 레벨업하는 이 순간에만 실행
+        message.textContent = "🎉 슬라임 20마리 모두 처치! 레벨 2가 되었어!";
+        // 자동 저장은 레벨업 순간에만 실행
         saveGame(false);
       } else if (killedCount > 0) {
-        message.textContent =
-          `슬라임을 물리쳤다! ${defeatedCount}/${maxSlimes}마리 처치!`;
+        message.textContent = `슬라임을 물리쳤다! ${defeatedCount}/${maxSlimes}마리 처치!`;
       } else if (hitCount > 0) {
-        message.textContent =
-          `공격 ${currentAttackType} 명중!`;
+        message.textContent = `공격 ${currentAttackType} 명중!`;
       } else {
-        message.textContent =
-          "휙! 가까이에서 슬라임을 보고 공격해 봐!";
+        message.textContent = "휙! 가까이에서 슬라임을 보고 공격해 봐!";
       }
-
       updateProgress();
     }
-
     function checkHeroContact(now) {
-      if (
-        heroHealthValue <= 0 ||
-        now < heroInvincibleUntil ||
-        now < attackEndAt
-      ) {
-        return;
-      }
-
+      if (heroHealthValue <= 0 || now < heroInvincibleUntil || now < attackEndAt) return;
       for (const slime of slimes) {
         const targetX = getSlimeDrawX(slime);
-
-        const touching =
-          heroX + heroWidth - 22 > targetX + 6 &&
+        const touching = heroX + heroWidth - 22 > targetX + 6 &&
           heroX + 22 < targetX + slimeWidth - 6 &&
           heroY + 8 - heroFootOffset < slimeHeight;
-
-        if (!touching) {
-          continue;
-        }
-
+        if (!touching) continue;
         heroHealthValue = Math.max(0, heroHealthValue - 1);
         heroHurtUntil = now + 250;
         heroInvincibleUntil = now + 1000;
-
-        clearAttack();
-        updateHeroHealth();
-
-        showDamageNumber(
-          heroX + heroWidth / 2,
-          groundHeight + heroY + 90,
-          "-1",
-          true
-        );
-
+        clearAttack(); updateHeroHealth();
+        showDamageNumber(heroX + heroWidth / 2, groundHeight + heroY + 90, "-1", true);
         if (heroHealthValue === 0) {
-          clearInputs();
-          heroHurtUntil = 0;
-          restartButton.hidden = false;
-
-          slimes.forEach((item) => {
-            item.moving = false;
-          });
-
-          message.textContent =
-            "쓰러졌어… 다시 시작을 눌러 도전해 보자!";
+          clearInputs(); heroHurtUntil = 0; restartButton.hidden = false;
+          slimes.forEach((item) => { item.moving = false; });
+          message.textContent = "쓰러졌어… 다시 시작을 눌러 도전해 보자!";
         } else {
-          message.textContent =
-            `앗! 슬라임에 닿았어! 체력 ${heroHealthValue}/${heroMaxHealth}`;
+          message.textContent = `앗! 슬라임에 닿았어! 체력 ${heroHealthValue}/${heroMaxHealth}`;
         }
-
-        updateProgress();
-        break;
+        updateProgress(); break;
       }
     }
-
     function updateHeroAppearance(now, moving) {
       const dead = heroHealthValue <= 0;
       const hurt = !dead && now < heroHurtUntil;
       const attacking = !dead && now < attackEndAt;
-
       hero.classList.toggle("hurt", hurt);
-      hero.classList.toggle(
-        "deadFallback",
-        dead && !imageReady(heroDead)
-      );
-
+      hero.classList.toggle("deadFallback", dead && !imageReady(heroDead));
       if (dead) {
-        walkTime = 0;
-        showHeroImage(heroDead);
+        walkTime = 0; showHeroImage(heroDead);
       } else if (hurt) {
-        walkTime = 0;
-        showHeroImage(heroHit);
+        walkTime = 0; showHeroImage(heroHit);
       } else if (attacking) {
-        walkTime = 0;
-        showHeroImage(
-          currentAttackType === 1 ? heroIdle : heroPunch
-        );
+        walkTime = 0; showHeroImage(currentAttackType === 1 ? heroIdle : heroPunch);
       } else if (heroY > 0) {
-        walkTime = 0;
-        showHeroImage(heroJump);
+        walkTime = 0; showHeroImage(heroJump);
       } else if (moving) {
         const frame = Math.floor(walkTime / 0.14) % 2;
         showHeroImage(frame === 0 ? heroWalk1 : heroWalk2);
       } else {
-        walkTime = 0;
-        showHeroImage(heroIdle);
+        walkTime = 0; showHeroImage(heroIdle);
       }
     }
-
     function drawHero(now) {
-      const drawDirection = now < attackEndAt
-        ? attackDirection
-        : direction;
-
-      const footOffset = heroHealthValue <= 0
-        ? deadFootOffset
-        : heroFootOffset;
-
+      const drawDirection = now < attackEndAt ? attackDirection : direction;
+      const footOffset = heroHealthValue <= 0 ? deadFootOffset : heroFootOffset;
       hero.style.left = `${heroX}px`;
-      hero.style.bottom =
-        `${groundHeight - footOffset + heroY}px`;
+      hero.style.bottom = `${groundHeight - footOffset + heroY}px`;
       hero.style.transform = `scaleX(${drawDirection})`;
     }
-
     function restartGame() {
-      clearInputs();
-      clearAttack();
-
-      heroX = Math.min(
-        30,
-        Math.max(0, game.clientWidth - heroWidth)
-      );
-      heroY = 0;
-      verticalSpeed = 0;
-      direction = 1;
-      walkTime = 0;
-
-      heroHealthValue = heroMaxHealth;
-      heroHurtUntil = 0;
-      heroInvincibleUntil = 0;
-
+      clearInputs(); clearAttack();
+      heroX = Math.min(30, Math.max(0, game.clientWidth - heroWidth));
+      heroY = 0; verticalSpeed = 0; direction = 1; walkTime = 0;
+      heroHealthValue = heroMaxHealth; heroHurtUntil = 0; heroInvincibleUntil = 0;
       hero.classList.remove("hurt", "deadFallback");
-      updateHeroHealth();
-      showHeroImage(heroIdle);
-
-      nextAttackAt = 0;
-      attackDirection = 1;
-      currentAttackType = 1;
-
+      updateHeroHealth(); showHeroImage(heroIdle);
+      nextAttackAt = 0; attackDirection = 1; currentAttackType = 1;
       slimes.forEach((slime) => slime.element.remove());
-      slimes = [];
-
-      spawnedCount = 0;
-      defeatedCount = 0;
-      spawnElapsed = 0;
-      level = 1;
-
-      gameTime = 0;
-      previousTime = performance.now();
-
-      effects.replaceChildren();
-      restartButton.hidden = true;
-
-      spawnSlime(gameTime);
-      updateProgress();
-      drawHero(gameTime);
-
-      message.textContent =
-        "슬라임 20마리를 모두 잡으면 레벨 2!";
-
+      slimes = []; spawnedCount = 0; defeatedCount = 0; spawnElapsed = 0; level = 1;
+      gameTime = 0; previousTime = performance.now();
+      effects.replaceChildren(); restartButton.hidden = true;
+      spawnSlime(gameTime); updateProgress(); drawHero(gameTime);
+      message.textContent = "슬라임 20마리를 모두 잡으면 레벨 2!";
       // 다시 시작할 때에는 저장 기록을 덮어쓰지 않음
     }
-
     function showSaveTime(savedAt, prefix) {
       const time = new Date(savedAt).toLocaleString("ko-KR");
-
       saveStatus.textContent = `${prefix} · ${time}`;
     }
-
     function saveGame(manual = false) {
       if (saveBlocked) {
-        saveStatus.textContent =
-          "기존 저장 기록을 읽지 못했어. 불러오기를 다시 시도해 줘.";
+        saveStatus.textContent = "기존 저장 기록을 읽지 못했어. 불러오기를 다시 시도해 줘.";
         return false;
       }
-
       const savedAt = Date.now();
-      const maxHeroX = Math.max(
-        0,
-        game.clientWidth - heroWidth
-      );
-      const maxSlimeX = Math.max(
-        0,
-        game.clientWidth - slimeWidth
-      );
-
-      const clampRatio = (value) =>
-        Math.max(0, Math.min(1, value));
-
+      const maxHeroX = Math.max(0, game.clientWidth - heroWidth);
+      const maxSlimeX = Math.max(0, game.clientWidth - slimeWidth);
+      const clampRatio = (value) => Math.max(0, Math.min(1, value));
       const data = {
-        version: 1,
-        savedAt,
-        level,
-        heroHealthValue,
-        heroXRatio: clampRatio(
-          heroX / Math.max(1, maxHeroX)
-        ),
-        direction,
-        spawnedCount,
-        defeatedCount,
-        spawnElapsed,
-
+        version: 1, savedAt, level, heroHealthValue,
+        heroXRatio: clampRatio(heroX / Math.max(1, maxHeroX)),
+        direction, spawnedCount, defeatedCount, spawnElapsed,
         slimes: slimes.map((slime) => ({
-          xRatio: clampRatio(
-            slime.x / Math.max(1, maxSlimeX)
-          ),
-          health: slime.health,
-          direction: slime.direction,
-          motionTime: slime.motionTime
+          xRatio: clampRatio(slime.x / Math.max(1, maxSlimeX)),
+          health: slime.health, direction: slime.direction, motionTime: slime.motionTime
         }))
       };
-
       try {
         localStorage.setItem(saveKey, JSON.stringify(data));
-
-        showSaveTime(
-          savedAt,
-          manual
-            ? "💾 저장 완료!"
-            : "🌟 레벨업! 자동 저장 완료!"
-        );
-
+        showSaveTime(savedAt, manual ? "💾 저장 완료!" : "🌟 레벨업! 자동 저장 완료!");
         return true;
       } catch (error) {
-        saveStatus.textContent =
-          "저장하지 못했어. 브라우저의 저장 공간 설정을 확인해 줘.";
-
+        saveStatus.textContent = "저장하지 못했어. 브라우저의 저장 공간 설정을 확인해 줘.";
         return false;
       }
     }
-
     function isValidSave(data) {
-      const integerBetween = (value, min, max) =>
-        Number.isInteger(value) &&
-        value >= min &&
-        value <= max;
-
-      const numberBetween = (value, min, max) =>
-        Number.isFinite(value) &&
-        value >= min &&
-        value <= max;
-
-      if (
-        !data ||
-        data.version !== 1 ||
-        !numberBetween(
-          data.savedAt, 0, 8640000000000000
-        ) ||
-        !integerBetween(data.level, 1, 2) ||
-        !integerBetween(
-          data.heroHealthValue, 0, heroMaxHealth
-        ) ||
-        !numberBetween(data.heroXRatio, 0, 1) ||
-        ![1, -1].includes(data.direction) ||
-        !integerBetween(
-          data.spawnedCount, 1, maxSlimes
-        ) ||
-        !integerBetween(
-          data.defeatedCount, 0, maxSlimes
-        ) ||
-        !numberBetween(
-          data.spawnElapsed, 0, spawnInterval
-        ) ||
-        !Array.isArray(data.slimes)
-      ) {
-        return false;
-      }
-
-      // 등장한 수 = 처치한 수 + 살아 있는 수
-      if (
-        data.spawnedCount !==
-        data.defeatedCount + data.slimes.length
-      ) {
-        return false;
-      }
-
-      // 20마리를 처치해야 레벨 2
-      if (
-        (data.level === 2) !==
-        (data.defeatedCount === maxSlimes)
-      ) {
-        return false;
-      }
-
-      return data.slimes.every((slime) =>
-        slime &&
+      const integerBetween = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
+      const numberBetween = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
+      if (!data || data.version !== 1 ||
+          !numberBetween(data.savedAt, 0, 8640000000000000) ||
+          !integerBetween(data.level, 1, 2) ||
+          !integerBetween(data.heroHealthValue, 0, heroMaxHealth) ||
+          !numberBetween(data.heroXRatio, 0, 1) ||
+          ![1, -1].includes(data.direction) ||
+          !integerBetween(data.spawnedCount, 1, maxSlimes) ||
+          !integerBetween(data.defeatedCount, 0, maxSlimes) ||
+          !numberBetween(data.spawnElapsed, 0, spawnInterval) ||
+          !Array.isArray(data.slimes)) return false;
+      if (data.spawnedCount !== data.defeatedCount + data.slimes.length) return false;
+      if ((data.level === 2) !== (data.defeatedCount === maxSlimes)) return false;
+      return data.slimes.every((slime) => slime &&
         numberBetween(slime.xRatio, 0, 1) &&
-        integerBetween(
-          slime.health, 1, slimeMaxHealth
-        ) &&
+        integerBetween(slime.health, 1, slimeMaxHealth) &&
         [1, -1].includes(slime.direction) &&
-        numberBetween(
-          slime.motionTime, 0, Number.MAX_SAFE_INTEGER
-        )
-      );
+        numberBetween(slime.motionTime, 0, Number.MAX_SAFE_INTEGER));
     }
-
     function loadGame() {
       let data;
-
       try {
         const saved = localStorage.getItem(saveKey);
-
         if (saved === null) {
           saveBlocked = false;
-          saveStatus.textContent =
-            "아직 저장된 기록이 없어.";
+          saveStatus.textContent = "아직 저장된 기록이 없어.";
           return false;
         }
-
         data = JSON.parse(saved);
-
-        if (!isValidSave(data)) {
-          throw new Error("저장 기록 형식 오류");
-        }
+        if (!isValidSave(data)) throw new Error("저장 기록 형식 오류");
       } catch (error) {
         saveBlocked = true;
-
-        saveStatus.textContent =
-          "저장 기록을 읽지 못했어. 현재 게임은 계속할 수 있어.";
-
+        saveStatus.textContent = "저장 기록을 읽지 못했어. 현재 게임은 계속할 수 있어.";
         return false;
       }
-
       saveBlocked = false;
-      clearInputs();
-      clearAttack();
-
+      clearInputs(); clearAttack();
       slimes.forEach((slime) => slime.element.remove());
-      slimes = [];
-      effects.replaceChildren();
-
-      gameTime = 0;
-      previousTime = performance.now();
-
-      heroX = data.heroXRatio *
-        Math.max(0, game.clientWidth - heroWidth);
-
-      // 불러온 뒤에는 바닥에서 재개
-      heroY = 0;
-      verticalSpeed = 0;
-      direction = data.direction;
-      walkTime = 0;
-
-      heroHealthValue = data.heroHealthValue;
-      heroHurtUntil = 0;
-
-      // 불러온 직후 바로 피격되지 않도록 잠깐 보호
+      slimes = []; effects.replaceChildren();
+      gameTime = 0; previousTime = performance.now();
+      heroX = data.heroXRatio * Math.max(0, game.clientWidth - heroWidth);
+      heroY = 0; verticalSpeed = 0; direction = data.direction; walkTime = 0;
+      heroHealthValue = data.heroHealthValue; heroHurtUntil = 0;
       heroInvincibleUntil = 1500;
-
-      nextAttackAt = 0;
-      attackDirection = direction;
-      currentAttackType = 1;
-
+      nextAttackAt = 0; attackDirection = direction; currentAttackType = 1;
       hero.classList.remove("hurt", "deadFallback");
-
-      // 저장된 슬라임을 기존 생성 함수로 복원
-      level = 1;
-      spawnedCount = 0;
-      defeatedCount = 0;
-      spawnElapsed = 0;
-
+      level = 1; spawnedCount = 0; defeatedCount = 0; spawnElapsed = 0;
       for (const savedSlime of data.slimes) {
         spawnSlime(gameTime);
-
         const slime = slimes[slimes.length - 1];
-
-        slime.x = savedSlime.xRatio *
-          Math.max(0, game.clientWidth - slimeWidth);
-
+        slime.x = savedSlime.xRatio * Math.max(0, game.clientWidth - slimeWidth);
         slime.health = savedSlime.health;
         slime.direction = savedSlime.direction;
         slime.motionTime = savedSlime.motionTime;
-        slime.knockback = 0;
-        slime.pauseUntil = 1500;
-        slime.hurtUntil = 0;
-        slime.moving = false;
-
+        slime.knockback = 0; slime.pauseUntil = 1500; slime.hurtUntil = 0; slime.moving = false;
         drawSlime(slime, gameTime);
       }
-
-      level = data.level;
-      spawnedCount = data.spawnedCount;
-      defeatedCount = data.defeatedCount;
-      spawnElapsed = data.spawnElapsed;
-
+      level = data.level; spawnedCount = data.spawnedCount;
+      defeatedCount = data.defeatedCount; spawnElapsed = data.spawnElapsed;
       restartButton.hidden = heroHealthValue > 0;
-
-      updateHeroHealth();
-      updateProgress();
-      updateHeroAppearance(gameTime, false);
-      drawHero(gameTime);
-
+      updateHeroHealth(); updateProgress(); updateHeroAppearance(gameTime, false); drawHero(gameTime);
       if (heroHealthValue <= 0) {
-        message.textContent =
-          "쓰러진 기록을 불러왔어. 다시 시작을 눌러 도전해 보자!";
+        message.textContent = "쓰러진 기록을 불러왔어. 다시 시작을 눌러 도전해 보자!";
       } else if (level === 2) {
-        message.textContent =
-          "🎉 레벨 2 기록을 불러왔어! 레벨 1 완료!";
+        message.textContent = "🎉 레벨 2 기록을 불러왔어! 레벨 1 완료!";
       } else {
-        message.textContent =
-          "📂 기록을 불러왔어! 모험을 이어 가자!";
+        message.textContent = "📂 기록을 불러왔어! 모험을 이어 가자!";
       }
-
       showSaveTime(data.savedAt, "📂 저장 기록 불러옴");
-
       return true;
     }
-    
     get("newGameButton").addEventListener("click", () => {
-      clearInputs();
-      clearAttack();
-
-      const confirmed = window.confirm(
-        "저장된 기록을 지우고 레벨 1부터 시작할까?"
-      );
-
-      // 확인창을 보는 동안 지난 시간을 게임에 더하지 않음
+      clearInputs(); clearAttack();
+      const confirmed = window.confirm("저장된 기록을 지우고 레벨 1부터 시작할까?");
       previousTime = performance.now();
-
-      if (!confirmed) {
-        return;
-      }
-
+      if (!confirmed) return;
       try {
         localStorage.removeItem(saveKey);
       } catch (error) {
-        saveStatus.textContent =
-          "저장 기록을 지우지 못했어. 다시 시도해 줘.";
+        saveStatus.textContent = "저장 기록을 지우지 못했어. 다시 시도해 줘.";
         return;
       }
-
       saveBlocked = false;
       restartGame();
-
-      saveStatus.textContent =
-        "🌱 레벨 1부터 새로 시작했어. 레벨업하면 자동 저장돼!";
+      saveStatus.textContent = "🌱 레벨 1부터 새로 시작했어. 레벨업하면 자동 저장돼!";
     });
     restartButton.addEventListener("click", restartGame);
-
-    get("saveButton").addEventListener("click", () => {
-      clearInputs();
-      saveGame(true);
-    });
-
-    get("loadButton").addEventListener("click", () => {
-      loadGame();
-    });
-
-    heroIdle.addEventListener("animationend", () => {
-      heroIdle.classList.remove("attackOne");
-    });
-
-    heroPunch.addEventListener("animationend", () => {
-      heroPunch.classList.remove("attackTwo");
-    });
-
-    const gameKeys = [
-      "ArrowLeft", "ArrowRight", "Space", "KeyZ", "KeyX"
-    ];
-
+    get("saveButton").addEventListener("click", () => { clearInputs(); saveGame(true); });
+    get("loadButton").addEventListener("click", () => { loadGame(); });
+    heroIdle.addEventListener("animationend", () => heroIdle.classList.remove("attackOne"));
+    heroPunch.addEventListener("animationend", () => heroPunch.classList.remove("attackTwo"));
+    const gameKeys = ["ArrowLeft", "ArrowRight", "Space", "KeyZ", "KeyX"];
     function isMenuButton(target) {
-      return (
-        target === restartButton ||
-        target === get("saveButton") ||
-        target === get("loadButton") ||
-        target === get("newGameButton")
-      );
+      return target === restartButton || target === get("saveButton") ||
+        target === get("loadButton") || target === get("newGameButton");
     }
-
     window.addEventListener("keydown", (event) => {
-      if (!gameKeys.includes(event.code)) {
-        return;
-      }
-
-      // 저장·불러오기 버튼에서는 키보드 기본 동작 유지
-      if (isMenuButton(event.target)) {
-        return;
-      }
-
+      if (!gameKeys.includes(event.code) || isMenuButton(event.target)) return;
       event.preventDefault();
-
-      if (heroHealthValue <= 0) {
-        return;
-      }
-
+      if (heroHealthValue <= 0) return;
       keys.add(event.code);
-
-      if (event.repeat) {
-        return;
-      }
-
+      if (event.repeat) return;
       if (event.code === "Space") jump();
       if (event.code === "KeyZ") attack(1);
       if (event.code === "KeyX") attack(2);
     });
-
     window.addEventListener("keyup", (event) => {
-      if (!gameKeys.includes(event.code)) {
-        return;
-      }
-
+      if (!gameKeys.includes(event.code)) return;
       keys.delete(event.code);
-
-      if (!isMenuButton(event.target)) {
-        event.preventDefault();
-      }
+      if (!isMenuButton(event.target)) event.preventDefault();
     });
-
-    // 마우스·터치로 메뉴 버튼을 누른 뒤 바로 조작 가능
-    [
-      restartButton,
-      get("saveButton"),
-      get("loadButton"),
-      get("newGameButton")
-    ].forEach((button) => {
-      button.addEventListener("click", (event) => {
-        if (event.detail > 0) {
-          button.blur();
-        }
-      });
+    [restartButton, get("saveButton"), get("loadButton"), get("newGameButton")].forEach((button) => {
+      button.addEventListener("click", (event) => { if (event.detail > 0) button.blur(); });
     });
-
     function connectMoveButton(buttonId, touches) {
       const button = get(buttonId);
-
       button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
-
-        if (heroHealthValue <= 0) {
-          return;
-        }
-
+        if (heroHealthValue <= 0) return;
         button.setPointerCapture(event.pointerId);
         touches.add(event.pointerId);
       });
-
-      function release(event) {
-        touches.delete(event.pointerId);
-      }
-
+      function release(event) { touches.delete(event.pointerId); }
       button.addEventListener("pointerup", release);
       button.addEventListener("pointercancel", release);
       button.addEventListener("lostpointercapture", release);
     }
-
     function connectActionButton(buttonId, action) {
       const button = get(buttonId);
-
-      button.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        action();
-      });
-
-      button.addEventListener("click", (event) => {
-        if (event.detail === 0) {
-          action();
-        }
-      });
+      button.addEventListener("pointerdown", (event) => { event.preventDefault(); action(); });
+      button.addEventListener("click", (event) => { if (event.detail === 0) action(); });
     }
-
     connectMoveButton("leftButton", leftTouches);
     connectMoveButton("rightButton", rightTouches);
-
     connectActionButton("jumpButton", jump);
     connectActionButton("attackOneButton", () => attack(1));
     connectActionButton("attackTwoButton", () => attack(2));
-
-    window.addEventListener("blur", () => {
-      clearInputs();
-      clearAttack();
-    });
-
+    window.addEventListener("blur", () => { clearInputs(); clearAttack(); });
     document.addEventListener("visibilitychange", () => {
-      previousTime = performance.now();
-      clearInputs();
-      clearAttack();
-
+      previousTime = performance.now(); clearInputs(); clearAttack();
       // 탭 전환 시에는 자동 저장하지 않음
     });
-
-    get("controls").addEventListener("contextmenu", (event) => {
-      event.preventDefault();
-    });
-
+    get("controls").addEventListener("contextmenu", (event) => event.preventDefault());
     function gameLoop(timestamp) {
-      const elapsed = Math.max(
-        0,
-        (timestamp - previousTime) / 1000
-      );
-
+      const elapsed = Math.max(0, (timestamp - previousTime) / 1000);
       previousTime = timestamp;
-
-      if (document.hidden) {
-        requestAnimationFrame(gameLoop);
-        return;
-      }
-
+      if (document.hidden) { requestAnimationFrame(gameLoop); return; }
       const deltaTime = Math.min(elapsed, 0.033);
-
       gameTime += elapsed * 1000;
       const now = gameTime;
-
       const gameWidth = game.clientWidth;
       const alive = heroHealthValue > 0;
       const attacking = now < attackEndAt;
       const hurt = now < heroHurtUntil;
-
       // 5초마다 한 마리 추가, 누적 20마리에서 종료
       if (alive && level === 1 && spawnedCount < maxSlimes) {
         spawnElapsed += elapsed;
-
-        while (
-          spawnElapsed >= spawnInterval &&
-          spawnedCount < maxSlimes
-        ) {
-          spawnElapsed -= spawnInterval;
-          spawnSlime(now);
+        while (spawnElapsed >= spawnInterval && spawnedCount < maxSlimes) {
+          spawnElapsed -= spawnInterval; spawnSlime(now);
         }
-
-        // 마지막 슬라임 등장 이후의 잔여 시간 정리
-        if (spawnedCount >= maxSlimes) {
-          spawnElapsed = 0;
-        }
+        if (spawnedCount >= maxSlimes) spawnElapsed = 0;
       }
-
       for (const slime of slimes) {
         updateSlimeMovement(slime, now, deltaTime);
         slime.knockback *= Math.exp(-10 * deltaTime);
       }
-
-      const moveLeft =
-        keys.has("ArrowLeft") || leftTouches.size > 0;
-
-      const moveRight =
-        keys.has("ArrowRight") || rightTouches.size > 0;
-
+      const moveLeft = keys.has("ArrowLeft") || leftTouches.size > 0;
+      const moveRight = keys.has("ArrowRight") || rightTouches.size > 0;
       const oldHeroX = heroX;
-
-      const currentSpeed = !alive || hurt
-        ? 0
-        : attacking
-          ? moveSpeed * 0.35
-          : moveSpeed;
-
+      const currentSpeed = !alive || hurt ? 0 : attacking ? moveSpeed * 0.35 : moveSpeed;
       if (moveLeft && !moveRight) {
         heroX -= currentSpeed * deltaTime;
-
-        if (alive && !attacking && !hurt) {
-          direction = -1;
-        }
+        if (alive && !attacking && !hurt) direction = -1;
       }
-
       if (moveRight && !moveLeft) {
         heroX += currentSpeed * deltaTime;
-
-        if (alive && !attacking && !hurt) {
-          direction = 1;
-        }
+        if (alive && !attacking && !hurt) direction = 1;
       }
-
       const maxHeroX = Math.max(0, gameWidth - heroWidth);
-
-      const sideMargin = alive
-        ? 0
-        : Math.min(30, maxHeroX / 2);
-
-      heroX = Math.max(
-        sideMargin,
-        Math.min(maxHeroX - sideMargin, heroX)
-      );
-
-      const moving =
-        alive &&
-        !hurt &&
-        Math.abs(heroX - oldHeroX) > 0.01;
-
-      if (moving && heroY === 0 && !attacking) {
-        walkTime += deltaTime;
-      }
-
+      const sideMargin = alive ? 0 : Math.min(30, maxHeroX / 2);
+      heroX = Math.max(sideMargin, Math.min(maxHeroX - sideMargin, heroX));
+      const moving = alive && !hurt && Math.abs(heroX - oldHeroX) > 0.01;
+      if (moving && heroY === 0 && !attacking) walkTime += deltaTime;
       verticalSpeed -= gravity * deltaTime;
       heroY += verticalSpeed * deltaTime;
-
-      if (heroY <= 0) {
-        heroY = 0;
-        verticalSpeed = 0;
-      }
-
+      if (heroY <= 0) { heroY = 0; verticalSpeed = 0; }
       if (pendingHitAt !== null && now >= pendingHitAt) {
-        pendingHitAt = null;
-        checkAttackHit(now);
+        pendingHitAt = null; checkAttackHit(now);
       }
-
       checkHeroContact(now);
       updateHeroAppearance(now, moving);
       drawHero(now);
-
-      for (const slime of slimes) {
-        drawSlime(slime, now);
-      }
-
+      for (const slime of slimes) drawSlime(slime, now);
       updateProgress();
       requestAnimationFrame(gameLoop);
     }
-
-    // 접속 시 마지막 저장 기록을 자동으로 불러옴
     restartGame();
     loadGame();
     requestAnimationFrame(gameLoop);
