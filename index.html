@@ -19,16 +19,16 @@
     .heroImage { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; transform-origin: 50% 90%; visibility: hidden; user-select: none; -webkit-user-drag: none; }
     .heroImage.visible { visibility: visible; }
     #hero.hurt .heroImage { filter: brightness(.65) sepia(1) saturate(12) hue-rotate(-35deg); }
-    #heroDead { inset: auto; left: 50%; bottom: 0; width: 150px; height: 100px; transform: translateX(-50%); object-fit: contain; object-position: center bottom; }
-    #hero.deadFallback #heroIdle { transform: translateY(15px) rotate(80deg); filter: grayscale(.7); }
-    #heroIdle.attackOne { animation: heroAttackOne 280ms ease-out; }
+    .heroDeadSprite { inset: auto; left: 50%; bottom: 0; width: 150px; height: 100px; transform: translateX(-50%); object-fit: contain; object-position: center bottom; }
+    #hero.deadFallback .idleSprite { transform: translateY(15px) rotate(80deg); filter: grayscale(.7); }
+    .heroImage.attackOne { animation: heroAttackOne 280ms ease-out; }
     @keyframes heroAttackOne {
       0%,100% { transform: translateX(0) rotate(0deg); }
       20% { transform: translateX(-8px) rotate(-10deg); }
       45% { transform: translateX(23px) rotate(15deg) scale(1.07,.95); }
       65% { transform: translateX(17px) rotate(9deg); }
     }
-    #heroPunch.attackTwo { animation: heroAttackTwo 320ms ease-out; }
+    .heroImage.attackTwo { animation: heroAttackTwo 320ms ease-out; }
     @keyframes heroAttackTwo {
       0% { transform: translateX(-6px) rotate(-4deg); }
       35%,60% { transform: translateX(18px) rotate(3deg); }
@@ -134,14 +134,41 @@
     const get = (id) => document.getElementById(id);
     const game = get("game");
     const hero = get("hero");
-    const heroIdle = get("heroIdle");
-    const heroWalk1 = get("heroWalk1");
-    const heroWalk2 = get("heroWalk2");
-    const heroJump = get("heroJump");
-    const heroPunch = get("heroPunch");
-    const heroHit = get("heroHit");
-    const heroDead = get("heroDead");
-    const heroImages = [heroIdle, heroWalk1, heroWalk2, heroJump, heroPunch, heroHit, heroDead];
+    let heroIdle = get("heroIdle");
+    let heroWalk1 = get("heroWalk1");
+    let heroWalk2 = get("heroWalk2");
+    let heroJump = get("heroJump");
+    let heroPunch = get("heroPunch");
+    let heroHit = get("heroHit");
+    let heroDead = get("heroDead");
+    let heroThrust = heroIdle;
+    heroIdle.classList.add("idleSprite");
+    heroDead.classList.add("heroDeadSprite");
+    const levelOneImages = [heroIdle, heroWalk1, heroWalk2, heroJump, heroPunch, heroHit, heroDead];
+    const levelTwoFiles = ["hero.png", "hero-walk1.png", "hero-walk2.png", "hero-jump.png", "hero-attack2.png", "hero-hit.png", "hero-dead.png", "hero-attack1.png"];
+    const levelTwoImages = levelTwoFiles.map((file, index) => {
+      const image = document.createElement("img");
+      image.className = "heroImage";
+      if (index === 0) image.classList.add("idleSprite");
+      if (index === 6) image.classList.add("heroDeadSprite");
+      image.alt = "";
+      image.setAttribute("aria-hidden", "true");
+      image.src = `images/char/level2/${file}`;
+      hero.appendChild(image);
+      return image;
+    });
+    const heroImages = [...levelOneImages, ...levelTwoImages];
+    let appearanceLevel = 1;
+    function applyLevelImages() {
+      const nextLevel = level >= 2 ? 2 : 1;
+      if (appearanceLevel === nextLevel) return;
+      heroImages.forEach((image) => image.classList.remove("visible", "attackOne", "attackTwo"));
+      const images = nextLevel === 2 ? levelTwoImages : levelOneImages;
+      [heroIdle, heroWalk1, heroWalk2, heroJump, heroPunch, heroHit, heroDead] = images;
+      heroThrust = nextLevel === 2 ? images[7] : heroIdle;
+      appearanceLevel = nextLevel;
+      showHeroImage(heroIdle);
+    }
     const heroHealthText = get("heroHealthText");
     const heroHealthFill = get("heroHealthFill");
     const restartButton = get("restartButton");
@@ -169,7 +196,7 @@
     const rightTouches = new Set();
     const slimeWidth = 68;
     const slimeHeight = 54;
-    const slimeMaxHealth = 3;
+    const slimeMaxHealth = 4;
     const slimeMoveSpeed = 65;
     const maxSlimes = 20;
     const spawnInterval = 5;
@@ -212,7 +239,7 @@
     function clearAttack() {
       pendingHitAt = null;
       attackEndAt = 0;
-      heroIdle.classList.remove("attackOne");
+      heroThrust.classList.remove("attackOne");
       heroPunch.classList.remove("attackTwo");
     }
     function updateHeroHealth() {
@@ -328,8 +355,9 @@
     function attack(type) {
       const now = gameTime;
       if (heroHealthValue <= 0 || now < heroHurtUntil || now < nextAttackAt) return;
-      if (type === 2 && !imageReady(heroPunch)) {
-        message.textContent = "images/char/level1/hero-attack2.png 파일 이름과 업로드를 확인해 줘!";
+      const attackImage = type === 1 ? heroThrust : heroPunch;
+      if (!imageReady(attackImage)) {
+        message.textContent = `${attackImage.getAttribute("src")} 파일 이름과 업로드를 확인해 줘!`;
         return;
       }
       const settings = attackSettings[type];
@@ -338,10 +366,10 @@
       attackEndAt = now + settings.duration;
       nextAttackAt = now + settings.cooldown;
       pendingHitAt = now + settings.impactDelay;
-      heroIdle.classList.remove("attackOne");
+      heroThrust.classList.remove("attackOne");
       heroPunch.classList.remove("attackTwo");
       if (type === 1) {
-        showHeroImage(heroIdle); restartAnimation(heroIdle, "attackOne");
+        showHeroImage(heroThrust); restartAnimation(heroThrust, "attackOne");
       } else {
         showHeroImage(heroPunch); restartAnimation(heroPunch, "attackTwo");
       }
@@ -390,6 +418,7 @@
       slimes = slimes.filter((slime) => slime.health > 0);
       if (defeatedCount === maxSlimes) {
         level = 2;
+        applyLevelImages();
         message.textContent = "🎉 슬라임 20마리 모두 처치! 레벨 2가 되었어!";
         // 자동 저장은 레벨업 순간에만 실행
         saveGame(false);
@@ -426,6 +455,7 @@
       }
     }
     function updateHeroAppearance(now, moving) {
+      applyLevelImages();
       const dead = heroHealthValue <= 0;
       const hurt = !dead && now < heroHurtUntil;
       const attacking = !dead && now < attackEndAt;
@@ -436,7 +466,7 @@
       } else if (hurt) {
         walkTime = 0; showHeroImage(heroHit);
       } else if (attacking) {
-        walkTime = 0; showHeroImage(currentAttackType === 1 ? heroIdle : heroPunch);
+        walkTime = 0; showHeroImage(currentAttackType === 1 ? heroThrust : heroPunch);
       } else if (heroY > 0) {
         walkTime = 0; showHeroImage(heroJump);
       } else if (moving) {
@@ -463,6 +493,7 @@
       nextAttackAt = 0; attackDirection = 1; currentAttackType = 1;
       slimes.forEach((slime) => slime.element.remove());
       slimes = []; spawnedCount = 0; defeatedCount = 0; spawnElapsed = 0; level = 1;
+      applyLevelImages();
       gameTime = 0; previousTime = performance.now();
       effects.replaceChildren(); restartButton.hidden = true;
       spawnSlime(gameTime); updateProgress(); drawHero(gameTime);
@@ -566,7 +597,7 @@
       if (heroHealthValue <= 0) {
         message.textContent = "쓰러진 기록을 불러왔어. 다시 시작을 눌러 도전해 보자!";
       } else if (level === 2) {
-        message.textContent = "🎉 레벨 2 기록을 불러왔어! 레벨 1 완료!";
+        message.textContent = "🎉 레벨 2 기록을 불러왔어! 나뭇가지를 얻었어!";
       } else {
         message.textContent = "📂 기록을 불러왔어! 모험을 이어 가자!";
       }
@@ -591,8 +622,9 @@
     restartButton.addEventListener("click", restartGame);
     get("saveButton").addEventListener("click", () => { clearInputs(); saveGame(true); });
     get("loadButton").addEventListener("click", () => { loadGame(); });
-    heroIdle.addEventListener("animationend", () => heroIdle.classList.remove("attackOne"));
-    heroPunch.addEventListener("animationend", () => heroPunch.classList.remove("attackTwo"));
+    heroImages.forEach((image) => {
+      image.addEventListener("animationend", () => image.classList.remove("attackOne", "attackTwo"));
+    });
     const gameKeys = ["ArrowLeft", "ArrowRight", "Space", "KeyZ", "KeyX"];
     function isMenuButton(target) {
       return target === restartButton || target === get("saveButton") ||
