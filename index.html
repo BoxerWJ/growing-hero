@@ -86,6 +86,7 @@
       background: #b68659;
     }
 
+    /* 레벨 1 캐릭터 */
     .hero {
       position: absolute;
       bottom: 70px;
@@ -96,6 +97,58 @@
       z-index: 2;
       user-select: none;
       pointer-events: none;
+    }
+
+    /* 첫 번째 몬스터: 초록 슬라임 */
+    .slime {
+      position: absolute;
+      bottom: 70px;
+      left: 75%;
+      width: 64px;
+      height: 48px;
+      border: 3px solid #287b39;
+      border-radius: 50% 50% 30% 30%;
+      background: #7de36b;
+      z-index: 1;
+      transform-origin: center bottom;
+      animation: slimeBounce 1s ease-in-out infinite;
+    }
+
+    .slime-eye {
+      position: absolute;
+      top: 20px;
+      width: 6px;
+      height: 9px;
+      border-radius: 50%;
+      background: #243449;
+    }
+
+    .slime-eye.left {
+      left: 15px;
+    }
+
+    .slime-eye.right {
+      right: 15px;
+    }
+
+    .slime-mouth {
+      position: absolute;
+      top: 31px;
+      left: 25px;
+      width: 8px;
+      height: 5px;
+      border-bottom: 2px solid #243449;
+      border-radius: 50%;
+    }
+
+    @keyframes slimeBounce {
+      0%, 100% {
+        transform: scale(1.05, 0.92);
+      }
+
+      50% {
+        transform: scale(0.95, 1.08);
+      }
     }
 
     .info {
@@ -121,6 +174,7 @@
       cursor: pointer;
       touch-action: none;
       user-select: none;
+      -webkit-user-select: none;
     }
 
     .control-button:active {
@@ -152,6 +206,19 @@
       <div class="hill"></div>
       <div class="ground"></div>
 
+      <!-- 초록 슬라임 -->
+      <div
+        class="slime"
+        id="slime"
+        role="img"
+        aria-label="초록 슬라임"
+      >
+        <div class="slime-eye left"></div>
+        <div class="slime-eye right"></div>
+        <div class="slime-mouth"></div>
+      </div>
+
+      <!-- 검은 머리, 검은 단추 옷, 청바지, 무기 없음 -->
       <img
         class="hero"
         id="hero"
@@ -163,35 +230,50 @@
 
     <div class="info">
       ← → 이동 · 스페이스바 점프<br>
+      휴대폰에서는 이동과 점프를 동시에 눌러 봐!<br>
       장비: 검은 단추 옷 · 청바지<br>
       무기: 없음
     </div>
 
     <div class="controls">
-      <button class="control-button" id="leftButton"
-        type="button" aria-label="왼쪽으로 이동">←</button>
+      <button
+        class="control-button"
+        id="leftButton"
+        type="button"
+        aria-label="왼쪽으로 이동"
+      >←</button>
 
-      <button class="control-button" id="rightButton"
-        type="button" aria-label="오른쪽으로 이동">→</button>
+      <button
+        class="control-button"
+        id="rightButton"
+        type="button"
+        aria-label="오른쪽으로 이동"
+      >→</button>
 
-      <button class="control-button jump-button" id="jumpButton"
-        type="button">점프</button>
+      <button
+        class="control-button jump-button"
+        id="jumpButton"
+        type="button"
+      >점프</button>
     </div>
   </main>
 
   <script>
     const scene = document.getElementById("scene");
     const hero = document.getElementById("hero");
+    const slime = document.getElementById("slime");
+
     const leftButton = document.getElementById("leftButton");
     const rightButton = document.getElementById("rightButton");
     const jumpButton = document.getElementById("jumpButton");
 
+    // 캐릭터의 가로 위치
     let heroX = Math.max(
       0,
       (scene.clientWidth - hero.offsetWidth) / 2
     );
 
-    // 땅에서 얼마나 높이 올라왔는지
+    // 땅에서 올라온 높이
     let heroY = 0;
 
     // 위아래로 움직이는 속도
@@ -201,11 +283,15 @@
     const jumpPower = 520;
     const gravity = 1500;
 
+    let previousTime = null;
+
+    // 키보드 입력 상태
     const keys = {
       left: false,
       right: false
     };
 
+    // 손가락마다 입력을 따로 기억
     const touches = {
       left: new Set(),
       right: new Set()
@@ -217,12 +303,13 @@
     }
 
     function jump() {
-      // 땅에 있을 때만 점프 가능
-      if (heroY === 0) {
+      // 땅에 있을 때만 점프
+      if (heroY === 0 && verticalSpeed === 0) {
         verticalSpeed = jumpPower;
       }
     }
 
+    // 키보드 입력
     window.addEventListener("keydown", (event) => {
       if (event.key === "ArrowLeft") {
         event.preventDefault();
@@ -237,7 +324,6 @@
       if (event.code === "Space") {
         event.preventDefault();
 
-        // 계속 누르고 있어도 한 번만 점프
         if (!event.repeat) {
           jump();
         }
@@ -260,9 +346,11 @@
       }
     });
 
+    // 이동 버튼의 멀티터치 처리
     function setupMoveButton(button, direction) {
       button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
+
         button.setPointerCapture(event.pointerId);
         touches[direction].add(event.pointerId);
       });
@@ -279,20 +367,20 @@
     setupMoveButton(leftButton, "left");
     setupMoveButton(rightButton, "right");
 
-    // 클릭과 터치, 키보드로 점프 버튼 사용
-    // 손가락을 대는 순간 점프
-jumpButton.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  jump();
-});
+    // 다른 손가락으로 이동 중이어도 즉시 점프
+    jumpButton.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      jump();
+    });
 
-// 키보드로 점프 버튼을 선택해서 누르는 경우
-jumpButton.addEventListener("click", (event) => {
-  if (event.detail === 0) {
-    jump();
-  }
-});
+    // 키보드로 점프 버튼을 선택해서 누를 때
+    jumpButton.addEventListener("click", (event) => {
+      if (event.detail === 0) {
+        jump();
+      }
+    });
 
+    // 버튼을 길게 눌렀을 때 메뉴가 나오지 않도록 처리
     document.querySelectorAll(".control-button").forEach((button) => {
       button.addEventListener("contextmenu", (event) => {
         event.preventDefault();
@@ -302,10 +390,12 @@ jumpButton.addEventListener("click", (event) => {
     function stopMoving() {
       keys.left = false;
       keys.right = false;
+
       touches.left.clear();
       touches.right.clear();
     }
 
+    // 다른 창으로 이동하면 이동 입력 초기화
     window.addEventListener("blur", stopMoving);
 
     document.addEventListener("visibilitychange", () => {
@@ -316,6 +406,7 @@ jumpButton.addEventListener("click", (event) => {
       previousTime = null;
     });
 
+    // 캐릭터가 화면 밖으로 나가지 않도록 제한
     function keepInsideScene() {
       const maxX = Math.max(
         0,
@@ -325,12 +416,26 @@ jumpButton.addEventListener("click", (event) => {
       heroX = Math.max(0, Math.min(heroX, maxX));
     }
 
+    // 작은 화면에서도 슬라임이 잘리지 않도록 배치
+    function positionSlime() {
+      const maxX = Math.max(
+        0,
+        scene.clientWidth - slime.offsetWidth - 8
+      );
+
+      const slimeX = Math.max(
+        0,
+        Math.min(scene.clientWidth * 0.75, maxX)
+      );
+
+      slime.style.left = slimeX + "px";
+    }
+
     window.addEventListener("resize", () => {
       keepInsideScene();
+      positionSlime();
       drawHero();
     });
-
-    let previousTime = null;
 
     function gameLoop(currentTime) {
       if (previousTime === null) {
@@ -344,28 +449,34 @@ jumpButton.addEventListener("click", (event) => {
 
       previousTime = currentTime;
 
-      const movingLeft = keys.left || touches.left.size > 0;
-      const movingRight = keys.right || touches.right.size > 0;
+      const movingLeft =
+        keys.left || touches.left.size > 0;
+
+      const movingRight =
+        keys.right || touches.right.size > 0;
 
       const direction =
         Number(movingRight) - Number(movingLeft);
 
+      // 좌우 이동
       heroX += direction * moveSpeed * deltaTime;
 
+      // 이동 방향으로 바라보기
       if (direction < 0) {
         hero.style.transform = "scaleX(-1)";
       } else if (direction > 0) {
         hero.style.transform = "scaleX(1)";
       }
 
-      // ジャンプ中は重力で少しずつ下向きに加速
+      // 점프 중에는 중력 때문에 아래로 떨어짐
       if (heroY > 0 || verticalSpeed > 0) {
-        heroY += verticalSpeed * deltaTime
+        heroY +=
+          verticalSpeed * deltaTime
           - 0.5 * gravity * deltaTime * deltaTime;
 
         verticalSpeed -= gravity * deltaTime;
 
-        // 地面に着地
+        // 땅에 착지
         if (heroY <= 0) {
           heroY = 0;
           verticalSpeed = 0;
@@ -374,9 +485,11 @@ jumpButton.addEventListener("click", (event) => {
 
       keepInsideScene();
       drawHero();
+
       requestAnimationFrame(gameLoop);
     }
 
+    positionSlime();
     drawHero();
     requestAnimationFrame(gameLoop);
   </script>
