@@ -280,7 +280,18 @@
     setupMoveButton(rightButton, "right");
 
     // 클릭과 터치, 키보드로 점프 버튼 사용
-    jumpButton.addEventListener("click", jump);
+    // 손가락을 대는 순간 점프
+jumpButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  jump();
+});
+
+// 키보드로 점프 버튼을 선택해서 누르는 경우
+jumpButton.addEventListener("click", (event) => {
+  if (event.detail === 0) {
+    jump();
+  }
+});
 
     document.querySelectorAll(".control-button").forEach((button) => {
       button.addEventListener("contextmenu", (event) => {
