@@ -212,9 +212,15 @@
       height: 100%;
       border: 3px solid #329343;
       border-radius: 50% 50% 35% 35%;
-      background: #7be36b;
+      background:
+        radial-gradient(
+          ellipse at 30% 24%,
+          #caffaa 0%,
+          #7be36b 42%,
+          #58c954 100%
+        );
       transform-origin: center bottom;
-      animation: squish 0.85s infinite alternate ease-in-out;
+      will-change: transform, border-radius;
     }
 
     #slimeBody::before,
@@ -625,6 +631,130 @@
     let slimeAlive = true;
     let slimeReturnAt = 0;
     let slimeKnockback = 0;
+        // 슬라임 이동 설정
+    const slimeMoveSpeed = 65;
+
+    let slimeDirection = -1;
+    let slimePauseUntil = 0;
+    let slimeHurtUntil = 0;
+    let slimeMotionTime = 0;
+    let slimeMoving = false;
+    let slimeInitialized = false;
+
+    function resetSlimeMovement() {
+      const maxX = Math.max(
+        0,
+        game.clientWidth - slimeWidth
+      );
+
+      slimeX = Math.min(
+        maxX,
+        game.clientWidth * 0.75
+      );
+
+      slimeDirection = -1;
+      slimePauseUntil = 0;
+      slimeHurtUntil = 0;
+      slimeMotionTime = 0;
+      slimeMoving = false;
+      slimeInitialized = true;
+
+      slimeBody.style.transform = "";
+      slimeBody.style.borderRadius = "";
+    }
+
+    function updateSlimeMovement(now, deltaTime) {
+      if (!slimeInitialized) {
+        resetSlimeMovement();
+      }
+
+      const maxX = Math.max(
+        0,
+        game.clientWidth - slimeWidth
+      );
+
+      // 화면 크기가 달라져도 밖으로 나가지 않음
+      slimeX = Math.max(0, Math.min(maxX, slimeX));
+
+      const margin = Math.min(18, maxX / 2);
+      const leftLimit = margin;
+      const rightLimit = maxX - margin;
+
+      slimeMoving =
+        slimeAlive &&
+        heroHealthValue > 0 &&
+        now >= slimePauseUntil &&
+        now >= slimeHurtUntil &&
+        rightLimit > leftLimit;
+
+      if (!slimeMoving) {
+        return;
+      }
+
+      slimeMotionTime += deltaTime;
+
+      // 조금 빨라졌다 느려지며 미끄러짐
+      const speedWave =
+        0.85 + Math.sin(slimeMotionTime * 7) * 0.15;
+
+      slimeX +=
+        slimeDirection *
+        slimeMoveSpeed *
+        speedWave *
+        deltaTime;
+
+      // 가장자리에서는 잠깐 멈춘 뒤 반대 방향으로 이동
+      if (slimeX <= leftLimit) {
+        slimeX = leftLimit;
+        slimeDirection = 1;
+        slimePauseUntil = now + 500;
+        slimeMoving = false;
+      } else if (slimeX >= rightLimit) {
+        slimeX = rightLimit;
+        slimeDirection = -1;
+        slimePauseUntil = now + 500;
+        slimeMoving = false;
+      }
+    }
+
+    function updateSlimeShape(now) {
+      // 맞는 동안에는 기존 피격 애니메이션을 사용
+      if (now < slimeHurtUntil) {
+        return;
+      }
+
+      const wave = Math.sin(slimeMotionTime * 9);
+
+      if (slimeMoving) {
+        // 가로로 늘어나면 세로로 납작해짐
+        const stretch = 1.10 + wave * 0.08;
+        const squash = 1 / stretch;
+
+        // 윗부분이 이동 방향의 뒤쪽으로 처짐
+        const lean =
+          slimeDirection * (7 + wave * 3);
+
+        slimeBody.style.transform =
+          `skewX(${lean}deg) ` +
+          `scale(${stretch}, ${squash})`;
+
+        // 앞쪽은 둥글고 뒤쪽은 살짝 퍼지는 물방울 모양
+        slimeBody.style.borderRadius =
+          slimeDirection === 1
+            ? "58% 72% 32% 42% / 75% 85% 22% 20%"
+            : "72% 58% 42% 32% / 85% 75% 20% 22%";
+      } else {
+        // 멈춰 있을 때도 작게 출렁임
+        const idleWave = Math.sin(now / 320);
+        const stretch = 1 + idleWave * 0.025;
+
+        slimeBody.style.transform =
+          `scale(${stretch}, ${1 / stretch})`;
+
+        slimeBody.style.borderRadius =
+          "50% 50% 35% 35%";
+      }
+    }
 
     // 공격 설정
     const attackSettings = {
@@ -839,6 +969,10 @@
       slimeKnockback =
         attackDirection * settings.knockback;
 
+            // 맞으면 잠깐 멈추고 몸이 찌그러짐
+      slimeHurtUntil = now + 280;
+      slimeMoving = false;
+
       restartAnimation(slimeBody, "hit");
 
       if (slimeHealthValue === 0) {
@@ -992,6 +1126,7 @@
       slimeAlive = true;
       slimeReturnAt = 0;
       slimeKnockback = 0;
+      resetSlimeMovement();
 
       slimeBody.classList.remove("hit");
       effects.replaceChildren();
@@ -1154,13 +1289,7 @@
       const attacking = now < attackEndAt;
       const hurt = now < heroHurtUntil;
 
-      slimeX = Math.max(
-        0,
-        Math.min(
-          gameWidth - slimeWidth,
-          gameWidth * 0.75
-        )
-      );
+      updateSlimeMovement(now, deltaTime);
 
       const moveLeft =
         keys.has("ArrowLeft") || leftTouches.size > 0;
@@ -1244,7 +1373,11 @@
         slimeAlive = true;
         slimeHealthValue = slimeMaxHealth;
         slimeKnockback = 0;
+        resetSlimeMovement();
         slimeBody.classList.remove("hit");
+
+        // 다시 나타나면 잠깐 기다렸다 출발
+        slimePauseUntil = now + 600;
 
         message.textContent =
           "슬라임이 다시 나타났다!";
@@ -1252,6 +1385,7 @@
 
       checkHeroContact(now);
       updateHeroAppearance(now, moving);
+      updateSlimeShape(now);
 
       const drawDirection = now < attackEndAt
         ? attackDirection
