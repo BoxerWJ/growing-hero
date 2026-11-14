@@ -86,9 +86,9 @@
   <div id="game">
     <div id="status">
       레벨 <span id="level">1</span><br>
-      경험치 <span id="experience">0</span>/20<br>
-      처치한 슬라임 <span id="defeated">0</span>/20<br>
-      등장한 슬라임 <span id="spawned">0</span>/20<br>
+      경험치 <span id="experience">0</span><span id="experienceGoal">/20</span><br>
+      처치한 슬라임 <span id="defeated">0</span><span id="defeatedGoal">/20</span><br>
+      등장한 슬라임 <span id="spawned">0</span><span id="spawnedGoal">/20</span><br>
       <span id="spawnInfo">다음 등장까지 5초</span><br>
       ❤️ 체력 <span id="heroHealthText">10</span>/10
       <div id="heroHealthBar"><div id="heroHealthFill"></div></div>
@@ -246,16 +246,20 @@
       heroHealthText.textContent = heroHealthValue;
       heroHealthFill.style.width = `${heroHealthValue / heroMaxHealth * 100}%`;
     }
+    function canSpawnSlime() {
+      return level >= 2 || spawnedCount < maxSlimes;
+    }
     function updateProgress() {
+      ["experience", "defeated", "spawned"].forEach((id) => {
+        get(`${id}Goal`).textContent = level === 1 ? "/20" : "";
+      });
       get("level").textContent = level;
       get("experience").textContent = defeatedCount;
       get("defeated").textContent = defeatedCount;
       get("spawned").textContent = spawnedCount;
-      if (level === 2) {
-        get("spawnInfo").textContent = "🎉 레벨 1 완료!";
-      } else if (heroHealthValue <= 0) {
+      if (heroHealthValue <= 0) {
         get("spawnInfo").textContent = "다시 도전해 보자!";
-      } else if (spawnedCount >= maxSlimes) {
+      } else if (level === 1 && spawnedCount >= maxSlimes) {
         get("spawnInfo").textContent = `남은 슬라임 ${slimes.length}마리`;
       } else {
         const seconds = Math.max(1, Math.ceil(spawnInterval - spawnElapsed));
@@ -268,7 +272,7 @@
       element.classList.add(className);
     }
     function spawnSlime(now) {
-      if (spawnedCount >= maxSlimes || level !== 1) return;
+      if (!canSpawnSlime()) return;
       const element = document.createElement("div");
       element.className = "slime";
       const body = document.createElement("div");
@@ -289,7 +293,9 @@
           ? Math.max(0, maxX - 18) : Math.min(18, maxX);
       }
       const slime = {
-        element, body, healthFill, x, health: slimeMaxHealth,
+        element, body, healthFill, x,
+        maxHealth: level >= 2 ? 5 : slimeMaxHealth,
+        health: level >= 2 ? 5 : slimeMaxHealth,
         knockback: 0, direction: x > heroX ? -1 : 1,
         pauseUntil: now + 600, hurtUntil: 0,
         motionTime: Math.random() * 5, moving: false
@@ -299,7 +305,7 @@
       spawnedCount++;
       drawSlime(slime, now);
       if (spawnedCount > 1) {
-        message.textContent = `슬라임 등장! 지금까지 ${spawnedCount}/${maxSlimes}마리`;
+        message.textContent = `슬라임 등장! 지금까지 ${spawnedCount}${level === 1 ? "/20" : ""}마리`;
       }
       updateProgress();
     }
@@ -345,7 +351,7 @@
     }
     function drawSlime(slime, now) {
       slime.element.style.left = `${getSlimeDrawX(slime)}px`;
-      slime.healthFill.style.width = `${slime.health / slimeMaxHealth * 100}%`;
+      slime.healthFill.style.width = `${slime.health / slime.maxHealth * 100}%`;
       updateSlimeShape(slime, now);
     }
     function jump() {
@@ -393,7 +399,7 @@
       spark.addEventListener("animationend", () => spark.remove(), { once: true });
     }
     function checkAttackHit(now) {
-      if (heroHealthValue <= 0 || level !== 1) return;
+      if (heroHealthValue <= 0) return;
       const settings = attackSettings[currentAttackType];
       const attackLeft = attackDirection === 1 ? heroX + heroWidth / 2 : heroX - settings.reach;
       const attackRight = attackDirection === 1 ? heroX + heroWidth + settings.reach : heroX + heroWidth / 2;
@@ -416,14 +422,15 @@
         }
       }
       slimes = slimes.filter((slime) => slime.health > 0);
-      if (defeatedCount === maxSlimes) {
+      if (level === 1 && defeatedCount === maxSlimes) {
         level = 2;
+        spawnElapsed = 0;
         applyLevelImages();
         message.textContent = "🎉 슬라임 20마리 모두 처치! 레벨 2가 되었어!";
         // 자동 저장은 레벨업 순간에만 실행
         saveGame(false);
       } else if (killedCount > 0) {
-        message.textContent = `슬라임을 물리쳤다! ${defeatedCount}/${maxSlimes}마리 처치!`;
+        message.textContent = `슬라임을 물리쳤다! ${defeatedCount}${level === 1 ? "/20" : ""}마리 처치!`;
       } else if (hitCount > 0) {
         message.textContent = `공격 ${currentAttackType} 명중!`;
       } else {
@@ -514,12 +521,12 @@
       const maxSlimeX = Math.max(0, game.clientWidth - slimeWidth);
       const clampRatio = (value) => Math.max(0, Math.min(1, value));
       const data = {
-        version: 1, savedAt, level, heroHealthValue,
+        version: 2, savedAt, level, heroHealthValue,
         heroXRatio: clampRatio(heroX / Math.max(1, maxHeroX)),
         direction, spawnedCount, defeatedCount, spawnElapsed,
         slimes: slimes.map((slime) => ({
           xRatio: clampRatio(slime.x / Math.max(1, maxSlimeX)),
-          health: slime.health, direction: slime.direction, motionTime: slime.motionTime
+          health: slime.health, maxHealth: slime.maxHealth, direction: slime.direction, motionTime: slime.motionTime
         }))
       };
       try {
@@ -534,21 +541,22 @@
     function isValidSave(data) {
       const integerBetween = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
       const numberBetween = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
-      if (!data || data.version !== 1 ||
+      if (!data || ![1, 2].includes(data.version) ||
           !numberBetween(data.savedAt, 0, 8640000000000000) ||
           !integerBetween(data.level, 1, 2) ||
           !integerBetween(data.heroHealthValue, 0, heroMaxHealth) ||
           !numberBetween(data.heroXRatio, 0, 1) ||
           ![1, -1].includes(data.direction) ||
-          !integerBetween(data.spawnedCount, 1, maxSlimes) ||
-          !integerBetween(data.defeatedCount, 0, maxSlimes) ||
+          !integerBetween(data.spawnedCount, 1, data.level === 1 ? maxSlimes : Number.MAX_SAFE_INTEGER) ||
+          !integerBetween(data.defeatedCount, 0, Number.MAX_SAFE_INTEGER) ||
           !numberBetween(data.spawnElapsed, 0, spawnInterval) ||
           !Array.isArray(data.slimes)) return false;
       if (data.spawnedCount !== data.defeatedCount + data.slimes.length) return false;
-      if ((data.level === 2) !== (data.defeatedCount === maxSlimes)) return false;
+      if ((data.level === 2) !== (data.defeatedCount >= maxSlimes)) return false;
       return data.slimes.every((slime) => slime &&
         numberBetween(slime.xRatio, 0, 1) &&
-        integerBetween(slime.health, 1, slimeMaxHealth) &&
+        integerBetween(slime.health, 1, data.version === 1 ? slimeMaxHealth : slime.maxHealth) &&
+        (data.version === 1 || slime.maxHealth === (data.level === 1 ? slimeMaxHealth : 5)) &&
         [1, -1].includes(slime.direction) &&
         numberBetween(slime.motionTime, 0, Number.MAX_SAFE_INTEGER));
     }
@@ -579,12 +587,13 @@
       heroInvincibleUntil = 1500;
       nextAttackAt = 0; attackDirection = direction; currentAttackType = 1;
       hero.classList.remove("hurt", "deadFallback");
-      level = 1; spawnedCount = 0; defeatedCount = 0; spawnElapsed = 0;
+      level = data.level; spawnedCount = 0; defeatedCount = 0; spawnElapsed = 0;
       for (const savedSlime of data.slimes) {
         spawnSlime(gameTime);
         const slime = slimes[slimes.length - 1];
         slime.x = savedSlime.xRatio * Math.max(0, game.clientWidth - slimeWidth);
         slime.health = savedSlime.health;
+        slime.maxHealth = data.version === 1 ? slimeMaxHealth : savedSlime.maxHealth;
         slime.direction = savedSlime.direction;
         slime.motionTime = savedSlime.motionTime;
         slime.knockback = 0; slime.pauseUntil = 1500; slime.hurtUntil = 0; slime.moving = false;
@@ -688,13 +697,13 @@
       const alive = heroHealthValue > 0;
       const attacking = now < attackEndAt;
       const hurt = now < heroHurtUntil;
-      // 5초마다 한 마리 추가, 누적 20마리에서 종료
-      if (alive && level === 1 && spawnedCount < maxSlimes) {
+      // 레벨1은 총 20마리, 레벨2는 5초마다 계속 등장
+      if (alive && canSpawnSlime()) {
         spawnElapsed += elapsed;
-        while (spawnElapsed >= spawnInterval && spawnedCount < maxSlimes) {
+        while (spawnElapsed >= spawnInterval && canSpawnSlime()) {
           spawnElapsed -= spawnInterval; spawnSlime(now);
         }
-        if (spawnedCount >= maxSlimes) spawnElapsed = 0;
+        if (!canSpawnSlime()) spawnElapsed = 0;
       }
       for (const slime of slimes) {
         updateSlimeMovement(slime, now, deltaTime);
