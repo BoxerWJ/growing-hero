@@ -528,6 +528,8 @@
             type="button">💾 저장</button>
     <button id="loadButton" class="saveButton"
             type="button">📂 불러오기</button>
+    <button id="newGameButton" class="saveButton"
+            type="button">🌱 처음부터</button>
 
     <p id="saveStatus" role="status">
       아직 저장된 기록이 없어.
@@ -1435,7 +1437,36 @@
 
       return true;
     }
+    
+    get("newGameButton").addEventListener("click", () => {
+      clearInputs();
+      clearAttack();
 
+      const confirmed = window.confirm(
+        "저장된 기록을 지우고 레벨 1부터 시작할까?"
+      );
+
+      // 확인창을 보는 동안 지난 시간을 게임에 더하지 않음
+      previousTime = performance.now();
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        localStorage.removeItem(saveKey);
+      } catch (error) {
+        saveStatus.textContent =
+          "저장 기록을 지우지 못했어. 다시 시도해 줘.";
+        return;
+      }
+
+      saveBlocked = false;
+      restartGame();
+
+      saveStatus.textContent =
+        "🌱 레벨 1부터 새로 시작했어. 레벨업하면 자동 저장돼!";
+    });
     restartButton.addEventListener("click", restartGame);
 
     get("saveButton").addEventListener("click", () => {
@@ -1463,7 +1494,8 @@
       return (
         target === restartButton ||
         target === get("saveButton") ||
-        target === get("loadButton")
+        target === get("loadButton") ||
+        target === get("newGameButton")
       );
     }
 
@@ -1510,7 +1542,8 @@
     [
       restartButton,
       get("saveButton"),
-      get("loadButton")
+      get("loadButton"),
+      get("newGameButton")
     ].forEach((button) => {
       button.addEventListener("click", (event) => {
         if (event.detail > 0) {
