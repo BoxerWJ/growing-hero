@@ -407,13 +407,13 @@
       effects.appendChild(damage);
       damage.addEventListener("animationend", () => damage.remove(), { once: true });
     }
-    function showHitEffect(x, type) {
+    function showHitEffect(x, type, damage) {
       const spark = document.createElement("div");
       spark.className = type === 2 ? "hitSpark punchSpark" : "hitSpark";
       spark.style.left = `${x}px`;
       spark.style.bottom = "88px";
       effects.appendChild(spark);
-      showDamageNumber(x, 123, "1", false);
+      showDamageNumber(x, 123, String(damage), false);
       spark.addEventListener("animationend", () => spark.remove(), { once: true });
     }
     function checkAttackHit(now) {
@@ -429,8 +429,9 @@
         const horizontalHit = attackRight >= targetX && attackLeft <= targetX + slimeWidth;
         if (!horizontalHit || !verticalHit) continue;
         hitCount++;
-        slime.health = Math.max(0, slime.health - 1);
-        showHitEffect(targetX + slimeWidth / 2, currentAttackType);
+        const damage = level >= 3 ? 2 : 1;
+        slime.health = Math.max(0, slime.health - damage);
+        showHitEffect(targetX + slimeWidth / 2, currentAttackType, damage);
         slime.knockback = attackDirection * settings.knockback;
         slime.hurtUntil = now + 280;
         slime.moving = false;
