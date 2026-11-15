@@ -152,26 +152,30 @@
     heroDead.classList.add("heroDeadSprite");
     const levelOneImages = [heroIdle, heroWalk1, heroWalk2, heroJump, heroPunch, heroHit, heroDead];
     const levelTwoFiles = ["hero.png", "hero-walk1.png", "hero-walk2.png", "hero-jump.png", "hero-attack2.png", "hero-hit.png", "hero-dead.png", "hero-attack1.png"];
-    const levelTwoImages = levelTwoFiles.map((file, index) => {
+    function createLevelImages(folder) {
+      return levelTwoFiles.map((file, index) => {
       const image = document.createElement("img");
       image.className = "heroImage";
       if (index === 0) image.classList.add("idleSprite");
       if (index === 6) image.classList.add("heroDeadSprite");
       image.alt = "";
       image.setAttribute("aria-hidden", "true");
-      image.src = `images/char/level2/${file}`;
+      image.src = `images/char/${folder}/${file}`;
       hero.appendChild(image);
       return image;
     });
-    const heroImages = [...levelOneImages, ...levelTwoImages];
+    }
+    const levelTwoImages = createLevelImages("level2");
+    const levelThreeImages = createLevelImages("level3");
+    const heroImages = [...levelOneImages, ...levelTwoImages, ...levelThreeImages];
     let appearanceLevel = 1;
     function applyLevelImages() {
-      const nextLevel = level >= 2 ? 2 : 1;
+      const nextLevel = Math.min(level, 3);
       if (appearanceLevel === nextLevel) return;
       heroImages.forEach((image) => image.classList.remove("visible", "attackOne", "attackTwo"));
-      const images = nextLevel === 2 ? levelTwoImages : levelOneImages;
+      const images = nextLevel >= 3 ? levelThreeImages : nextLevel === 2 ? levelTwoImages : levelOneImages;
       [heroIdle, heroWalk1, heroWalk2, heroJump, heroPunch, heroHit, heroDead] = images;
-      heroThrust = nextLevel === 2 ? images[7] : heroIdle;
+      heroThrust = nextLevel >= 2 ? images[7] : heroIdle;
       appearanceLevel = nextLevel;
       showHeroImage(heroIdle);
     }
@@ -189,8 +193,8 @@
     const jumpPower = 620;
     const gravity = 1700;
     let heroMaxHealth = 10;
-    const maxHealthForLevel = (value) => value >= 2 ? 11 : 10;
-    const levelForExperience = (value) => value >= 40 ? 3 : value >= 20 ? 2 : 1;
+    const maxHealthForLevel = (value) => value >= 3 ? 12 : value >= 2 ? 11 : 10;
+    const levelForExperience = (value) => value >= 60 ? 4 : value >= 40 ? 3 : value >= 20 ? 2 : 1;
     let heroX = 30;
     let heroY = 0;
     let verticalSpeed = 0;
@@ -207,7 +211,8 @@
     const slimeMaxHealth = 4;
     const slimeMoveSpeed = 65;
     const maxSlimes = 20;
-    const spawnInterval = 5;
+    const spawnIntervalForLevel = (value) => value >= 3 ? 3 : 5;
+    const getSpawnInterval = () => spawnIntervalForLevel(level);
     let slimes = [];
     let spawnedCount = 0;
     let defeatedCount = 0;
@@ -262,7 +267,7 @@
       ["experience", "defeated", "spawned"].forEach((id) => {
         get(`${id}Goal`).textContent = level === 1 ? "/20" : "";
       });
-      get("experienceGoal").textContent = level === 1 ? "/20" : level === 2 ? "/40" : "";
+      get("experienceGoal").textContent = level === 1 ? "/20" : level === 2 ? "/40" : level === 3 ? "/60" : "";
       get("level").textContent = level;
       get("experience").textContent = defeatedCount;
       get("defeated").textContent = defeatedCount;
@@ -272,7 +277,7 @@
       } else if (level === 1 && spawnedCount >= maxSlimes) {
         get("spawnInfo").textContent = `남은 슬라임 ${slimes.length}마리`;
       } else {
-        const seconds = Math.max(1, Math.ceil(spawnInterval - spawnElapsed));
+        const seconds = Math.max(1, Math.ceil(getSpawnInterval() - spawnElapsed));
         get("spawnInfo").textContent = `다음 등장까지 ${seconds}초`;
       }
     }
@@ -541,7 +546,7 @@
       const maxSlimeX = Math.max(0, game.clientWidth - slimeWidth);
       const clampRatio = (value) => Math.max(0, Math.min(1, value));
       const data = {
-        version: 3, savedAt, level, heroHealthValue,
+        version: 4, savedAt, level, heroHealthValue,
         heroXRatio: clampRatio(heroX / Math.max(1, maxHeroX)),
         direction, spawnedCount, defeatedCount, spawnElapsed,
         slimes: slimes.map((slime) => ({
@@ -561,20 +566,20 @@
     function isValidSave(data) {
       const integerBetween = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
       const numberBetween = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
-      if (!data || ![1, 2, 3].includes(data.version) ||
+      if (!data || ![1, 2, 3, 4].includes(data.version) ||
           !numberBetween(data.savedAt, 0, 8640000000000000) ||
-          !integerBetween(data.level, 1, data.version < 3 ? 2 : 3) ||
+          !integerBetween(data.level, 1, data.version < 3 ? 2 : data.version === 3 ? 3 : 4) ||
           !integerBetween(data.heroHealthValue, 0, maxHealthForLevel(data.level)) ||
           !numberBetween(data.heroXRatio, 0, 1) ||
           ![1, -1].includes(data.direction) ||
           !integerBetween(data.spawnedCount, 1, data.level === 1 ? maxSlimes : Number.MAX_SAFE_INTEGER) ||
           !integerBetween(data.defeatedCount, 0, Number.MAX_SAFE_INTEGER) ||
-          !numberBetween(data.spawnElapsed, 0, spawnInterval) ||
+          !numberBetween(data.spawnElapsed, 0, data.version < 4 ? 5 : spawnIntervalForLevel(data.level)) ||
           !Array.isArray(data.slimes)) return false;
       if (data.spawnedCount !== data.defeatedCount + data.slimes.length) return false;
       if (data.version < 3) {
         if ((data.level === 2) !== (data.defeatedCount >= maxSlimes)) return false;
-      } else if (data.level !== levelForExperience(data.defeatedCount)) return false;
+      } else if (data.level !== (data.version === 3 ? Math.min(3, levelForExperience(data.defeatedCount)) : levelForExperience(data.defeatedCount))) return false;
       return data.slimes.every((slime) => slime &&
         numberBetween(slime.xRatio, 0, 1) &&
         integerBetween(slime.health, 1, data.version === 1 ? slimeMaxHealth : slime.maxHealth) &&
@@ -609,7 +614,7 @@
       heroInvincibleUntil = 1500;
       nextAttackAt = 0; attackDirection = direction; currentAttackType = 1;
       hero.classList.remove("hurt", "deadFallback", "levelUp");
-      level = data.version < 3 ? levelForExperience(data.defeatedCount) : data.level; spawnedCount = 0; defeatedCount = 0; spawnElapsed = 0;
+      level = data.version < 4 ? levelForExperience(data.defeatedCount) : data.level; spawnedCount = 0; defeatedCount = 0; spawnElapsed = 0;
       for (const savedSlime of data.slimes) {
         spawnSlime(gameTime);
         const slime = slimes[slimes.length - 1];
@@ -621,8 +626,8 @@
         slime.knockback = 0; slime.pauseUntil = 1500; slime.hurtUntil = 0; slime.moving = false;
         drawSlime(slime, gameTime);
       }
-      level = data.version < 3 ? levelForExperience(data.defeatedCount) : data.level; spawnedCount = data.spawnedCount;
-      defeatedCount = data.defeatedCount; spawnElapsed = data.spawnElapsed;
+      level = data.version < 4 ? levelForExperience(data.defeatedCount) : data.level; spawnedCount = data.spawnedCount;
+      defeatedCount = data.defeatedCount; spawnElapsed = Math.min(data.spawnElapsed, getSpawnInterval());
       heroMaxHealth = maxHealthForLevel(level);
       restartButton.hidden = heroHealthValue > 0;
       updateHeroHealth(); updateProgress(); updateHeroAppearance(gameTime, false); drawHero(gameTime);
@@ -720,11 +725,11 @@
       const alive = heroHealthValue > 0;
       const attacking = now < attackEndAt;
       const hurt = now < heroHurtUntil;
-      // 레벨1은 총 20마리, 레벨2는 5초마다 계속 등장
+      // 레벨1은 총 20마리, 레벨2는 5초, 레벨3 이상은 3초마다 등장
       if (alive && canSpawnSlime()) {
         spawnElapsed += elapsed;
-        while (spawnElapsed >= spawnInterval && canSpawnSlime()) {
-          spawnElapsed -= spawnInterval; spawnSlime(now);
+        while (spawnElapsed >= getSpawnInterval() && canSpawnSlime()) {
+          spawnElapsed -= getSpawnInterval(); spawnSlime(now);
         }
         if (!canSpawnSlime()) spawnElapsed = 0;
       }
